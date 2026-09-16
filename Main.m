@@ -19,14 +19,12 @@ t = 0:Ta:tempoTotal-Ta;    % Vetor de tempo "contínuo"
 nPAnalog = length(t);      % Número total de pontos analógicos
 fs = 10e3;                 % Frequencia de amostragem(Trem de impulsos)
 Ts = 1/fs;                 % Periodo de amostragem(Trem de impulsos)
-nPlots = 8;                % Número total de plots
-ordemFiltro = 100;
-% fs >= 2*f1
 fNyquist = fs/2;
 fCorte = 1e3;
-fs = 10e3;
-Ts = 1/fs;
+ordemFiltro = 100;
+% fs >= 2*f1
 kPasso = round(Ts/Ta);
+nPlots = 8;                % Número total de plots
 
 sinalA = A1*sin(2*pi*f1*t);
 
