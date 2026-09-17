@@ -74,7 +74,7 @@ ylabel('Amplitude');
 title('Trem de impulsos');
 xlim([0 0.01]);
 
-sinalAmostrado = sinalFiltrado .* tremImpulsos*Ta;
+sinalAmostrado = sinalComposto .* tremImpulsos*Ta;
 
 ##figure;
 subplot(nPlots,1,3);
