@@ -20,38 +20,37 @@ nPAnalog = length(t);      % Número total de pontos analógicos
 fs = 10e3;                 % Frequencia de amostragem(Trem de impulsos)
 Ts = 1/fs;                 % Periodo de amostragem(Trem de impulsos)
 fNyquist = fs/2;
-fCorte = 1e3;
+fCorte = 2e3;
 ordemFiltro = 100;
 % fs >= 2*f1
-kPasso = round(Ts/Ta);
-nPlots = 8;                % Número total de plots
+nPlots = 6;                % Número total de plots
 
 sinalA = A1*sin(2*pi*f1*t);
 
-%figure;
-subplot(nPlots,1,1);
-plot(t, sinalA);
-grid on;
-xlabel('Tempo (s)');
-ylabel('Amplitude');
-title('Sinal A');
-xlim([0 0.01]);
+##figure;
+##subplot(nPlots,1,1);
+##plot(t, sinalA);
+##grid on;
+##xlabel('Tempo (s)');
+##ylabel('Amplitude');
+##title('Sinal A');
+##xlim([0 0.01]);
 
 sinalB = A2*sin(2*pi*f2*t);
 
-%figure;
-subplot(nPlots,1,2);
-plot(t, sinalB);
-grid on;
-xlabel('Tempo (s)');
-ylabel('Amplitude');
-title('Sinal B');
-xlim([0 0.01]);
+##figure;
+##subplot(nPlots,1,2);
+##plot(t, sinalB);
+##grid on;
+##xlabel('Tempo (s)');
+##ylabel('Amplitude');
+##title('Sinal B');
+##xlim([0 0.01]);
 
-sinalComposto = sinalA + sinalB;
+sinalComposto = sinalA;
 
-%figure;
-subplot(nPlots,1,3);
+##figure;
+subplot(nPlots,1,1);
 plot(t,sinalComposto);
 grid on;
 xlabel('Tempo (s)');
@@ -62,20 +61,23 @@ xlim([0 0.01]);
 filtro = fir1(ordemFiltro, fCorte/fNyquist);
 sinalFiltrado = filter(filtro, 1, sinalComposto);
 
+kPasso = round(Ts/Ta);
 tremImpulsos = zeros(1, nPAnalog);
-tremImpulsos(1:kPasso:end) = 1;
+tremImpulsos(1:kPasso:end) = 1/Ta;
 
-subplot(nPlots,1,4);
-stem(t, tremImpulsos);
+##figure;
+subplot(nPlots,1,2);
+stem(t, tremImpulsos*Ta);
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Trem de impulsos');
 xlim([0 0.01]);
 
-sinalAmostrado = sinalFiltrado .* tremImpulsos;
+sinalAmostrado = sinalFiltrado .* tremImpulsos*Ta;
 
-subplot(nPlots,1,5);
+##figure;
+subplot(nPlots,1,3);
 stem(t, sinalAmostrado);
 grid on;
 xlabel('Tempo (s)');
@@ -83,12 +85,13 @@ ylabel('Amplitude');
 title('Sinal amostrado');
 xlim([0 0.01]);
 
-f = (-nPAnalog/2 : nPAnalog/2 - 1) * (fAnalog / nPAnalog)
+f = (-nPAnalog/2 : nPAnalog/2 - 1)*(fAnalog/nPAnalog);
 
-sinalCompostoFTT = abs(fftshift(fft(sinalComposto)))/nPAnalog;
+sinalCompostoFTT = fftshift(fft(sinalComposto))/nPAnalog;
 
-subplot(nPlots,1,6);
-stem(f, sinalCompostoFTT);
+##figure;
+subplot(nPlots,1,4);
+stem(f, abs(sinalCompostoFTT));
 grid on;
 xlabel('Frequência (Hz)');
 ylabel('Magnitude');
@@ -96,10 +99,11 @@ title('Espectro do Sinal Composto');
 xlim([-10000 10000]);
 xticks(-10000 : 1000 : 10000);
 
-tremImpulsosFTT = abs(fftshift(fft(tremImpulsos)))/nPAnalog;
+tremImpulsosFTT = fftshift(fft(tremImpulsos))/nPAnalog;
 
-subplot(nPlots,1,7);
-stem(f, tremImpulsosFTT);
+##figure;
+subplot(nPlots,1,5);
+stem(f, abs(tremImpulsosFTT));
 grid on;
 xlabel('Frequência (Hz)');
 ylabel('Magnitude');
@@ -112,8 +116,9 @@ espectroSinalAmostrado = conv(sinalCompostoFTT,tremImpulsosFTT);
 nP_conv = length(espectroSinalAmostrado);
 f_conv = linspace(-fAnalog, fAnalog, nP_conv);
 
-subplot(nPlots,1,8);
-stem(f_conv, espectroSinalAmostrado);
+##figure;
+subplot(nPlots,1,6);
+stem(f_conv, abs(espectroSinalAmostrado));
 grid on;
 xlabel('Frequência (Hz)');
 ylabel('Magnitude');
