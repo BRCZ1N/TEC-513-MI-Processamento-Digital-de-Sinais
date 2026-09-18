@@ -28,11 +28,6 @@ kPasso = round(Ts/Ta);
 d = 0.2 * Ts;               % Largura do pulso de retenção (20% de Ts)
 numPontosPulso = round(d/Ta);
 
-% Trem de Impulsos (Amostragem Ideal para Comparação Espectral)
-tremImpulsos = zeros(1, nPAnalog);
-tremImpulsos(1:kPasso:end) = 1/Ta;
-sinalAmostradoIdeal = sinalComposto .* (tremImpulsos * Ta);
-
 % Trem de Pulsos Retangulares (Amostrador Prático)
 tremPulsos = zeros(1, nPAnalog);
 for i = 0 : floor(nPAnalog/kPasso) - 1
@@ -44,23 +39,14 @@ for i = 0 : floor(nPAnalog/kPasso) - 1
 end
 
 %% 3. AMOSTRAGEM FLAT-TOP (SAMPLE & HOLD)
-sinalFlatTop = zeros(1, nPAnalog);
-for i = 0 : floor(nPAnalog/kPasso) - 1
-    idx = i*kPasso + 1;
-    if idx <= nPAnalog
-        val = sinalComposto(idx);
-        idx_fim = min(idx + numPontosPulso - 1, nPAnalog);
-        sinalFlatTop(idx:idx_fim) = val;
-    end
-end
+sinalFlatTop = sinalComposto .* tremPulsos
 
 %% 4. ANÁLISE ESPECTRAL (FFT)
 f = (-nPAnalog/2 : nPAnalog/2 - 1) * (fAnalog / nPAnalog);
 
 sinalCompostoFFT = fftshift(fft(sinalComposto)) / nPAnalog;
 tremPulsosFFT = fftshift(fft(tremPulsos)) / nPAnalog;
-sinalIdealFFT = fftshift(fft(sinalAmostradoIdeal)) / nPAnalog;
-sinalFlatTopFFT = fftshift(fft(sinalFlatTop)) / nPAnalog;
+sinalFlatTopFFT = conv(sinalCompostoFFT,tremPulsosFFT);
 
 % Envoltória Teórica H(f) = (d/Ts) * sinc(f * d) do Efeito de Abertura
 H_teorico = (d/Ts) * sinc(f * d);
@@ -140,7 +126,3 @@ xlabel('Tempo (s)'); ylabel('Amplitude'); title('9. Sinal Reconstruído vs Sinal
 legend('Sinal A (1 kHz)', 'Reconstruído', 'Location', 'best');
 xlim([0 0.002]);
 
-subplot(5, 2, 10);
-stem(f, abs(sinalIdealFFT), 'm', 'filled'); grid on;
-xlabel('Frequência (Hz)'); ylabel('Magnitude'); title('10. Espectro Amostragem Ideal (Comparação)');
-xlim([-55000 55000]);
