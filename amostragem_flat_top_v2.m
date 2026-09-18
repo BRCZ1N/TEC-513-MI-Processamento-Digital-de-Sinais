@@ -25,7 +25,7 @@ sinalComposto = sinalA + sinalB;
 
 %% 2. GERAÇÃO DOS SINAIS DE AMOSTRAGEM
 kPasso = round(Ts/Ta);
-d = 0.2 * Ts;               % Largura do pulso de retenção (20% de Ts)
+d = (1/3) * Ts;             % Largura do pulso de retenção alterada para 1/3 de Ts
 numPontosPulso = round(d/Ta);
 
 % Trem de Pulsos Retangulares (Amostrador Prático)
@@ -38,32 +38,49 @@ for i = 0 : floor(nPAnalog/kPasso) - 1
     end
 end
 
-%% 3. AMOSTRAGEM FLAT-TOP (SAMPLE & HOLD)
-sinalFlatTop = sinalComposto .* tremPulsos
+%% 3. AMOSTRAGEM
+sinalFlatTop = sinalComposto .* tremPulsos;
 
 %% 4. ANÁLISE ESPECTRAL (FFT)
 f = (-nPAnalog/2 : nPAnalog/2 - 1) * (fAnalog / nPAnalog);
 
 sinalCompostoFFT = fftshift(fft(sinalComposto)) / nPAnalog;
 tremPulsosFFT = fftshift(fft(tremPulsos)) / nPAnalog;
-sinalFlatTopFFT = conv(sinalCompostoFFT,tremPulsosFFT);
+
+% Corrigido: Usar a FFT direta do sinal em vez da convolução para manter o vetor do mesmo tamanho
+sinalFlatTopFFT = fftshift(fft(sinalFlatTop)) / nPAnalog;
 
 % Envoltória Teórica H(f) = (d/Ts) * sinc(f * d) do Efeito de Abertura
 H_teorico = (d/Ts) * sinc(f * d);
 
-%% 5. FILTRAGEM (RECONSTRUÇÃO) COM FILTRO BUTTERWORTH E COMPENSAÇÃO DE GANHO
-fCorte = 3e3;                         % Frequência de corte (3 kHz) - Bloqueia os 5 kHz
-fNyquistAnalog = fAnalog / 2;
-ordemButter = 8;                      % Ordem do filtro
+%% 5. FILTRAGEM IDEAL NO DOMÍNIO DA FREQUÊNCIA
+fCorte = 3e3;                         % Frequência de corte (3 kHz)
 
-[b, a] = butter(ordemButter, fCorte/fNyquistAnalog, 'low');
+% 5.1. FFT do sinal amostrado (sem shift, para facilitar a aplicação do filtro)
+X_k = fft(sinalFlatTop);
+filter_ideal = zeros(1, nPAnalog);
 
-% Aplica o filtro Butterworth bidirecional (fase zero)
-sinalFiltrado = filtfilt(b, a, sinalFlatTop);
+% 5.2. Criar manualmente o filtro passa-baixa ideal
+for i = 1:nPAnalog
+    % Frequência correspondente ao índice atual da FFT
+    f_atual = (i - 1) * (fAnalog / nPAnalog);
 
-% Compensação de Amplitude:
-% Como a largura do pulso é apenas 20% do período (d = 0.2*Ts),
-% a energia do sinal cai proporcionalmente. Multiplicamos por (Ts/d) para recuperar a escala real.
+    % Permite as frequências abaixo do corte ou as frequências espelhadas (Nyquist a fs)
+    if f_atual <= fCorte || f_atual >= (fAnalog - fCorte)
+        filter_ideal(i) = 1;
+    else
+        filter_ideal(i) = 0;  % Bloqueia as frequências acima do corte
+    end
+end
+
+% 5.3. Aplicar o filtro no domínio da frequência
+X_k_filtered = X_k .* filter_ideal;
+
+% 5.4. Regressar ao domínio do tempo com IFFT (retirando pequenos resíduos imaginários com 'real')
+sinalFiltrado = real(ifft(X_k_filtered));
+
+% 5.5. Compensação de Amplitude
+% O duty cycle reduz a energia do sinal, então multiplicamos pelo inverso para recuperar a amplitude
 ganhoReconstrucao = Ts / d;
 sinalFiltradoCompensado = sinalFiltrado * ganhoReconstrucao;
 
@@ -107,14 +124,14 @@ xlim([-55000 55000]);
 subplot(5, 2, 7);
 plot(t, sinalComposto, 'k--', 'LineWidth', 1); hold on;
 plot(t, sinalFlatTop, 'r', 'LineWidth', 1.5); grid on;
-xlabel('Tempo (s)'); ylabel('Amplitude'); title('7. Sinal Amostrado Flat-Top x_{ft}(t)');
-legend('x(t) Composto', 'x_{ft}(t)', 'Location', 'best');
+xlabel('Tempo (s)'); ylabel('Amplitude'); title('7. Sinal Amostrado (Multiplicação)');
+legend('x(t) Composto', 'x_{amostrado}(t)', 'Location', 'best');
 xlim([0 0.002]);
 
 subplot(5, 2, 8);
 stem(f, abs(sinalFlatTopFFT), 'r', 'filled'); hold on;
 plot(f, abs(H_teorico * max(abs(sinalCompostoFFT))), 'k--', 'LineWidth', 1.5); grid on;
-xlabel('Frequência (Hz)'); ylabel('Magnitude'); title('8. Espectro Flat-Top |X_{ft}(f)| e Sinc');
+xlabel('Frequência (Hz)'); ylabel('Magnitude'); title('8. Espectro do Sinal Amostrado e Sinc');
 legend('Espectro', 'Envoltória Sinc', 'Location', 'best');
 xlim([-55000 55000]);
 
@@ -122,7 +139,11 @@ xlim([-55000 55000]);
 subplot(5, 2, 9);
 plot(t, sinalA, 'b--', 'LineWidth', 1.5); hold on;
 plot(t, sinalFiltradoCompensado, 'g', 'LineWidth', 1.5); grid on;
-xlabel('Tempo (s)'); ylabel('Amplitude'); title('9. Sinal Reconstruído vs Sinal A Desejado');
+xlabel('Tempo (s)'); ylabel('Amplitude'); title('9. Sinal Reconstruído (Filtro Ideal Domínio da Frequência)');
 legend('Sinal A (1 kHz)', 'Reconstruído', 'Location', 'best');
 xlim([0 0.002]);
 
+subplot(5, 2, 10);
+stem(f, abs(fftshift(X_k_filtered) / nPAnalog), 'm', 'filled'); grid on;
+xlabel('Frequência (Hz)'); ylabel('Magnitude'); title('10. Espectro do Sinal Filtrado');
+xlim([-55000 55000]);
