@@ -456,6 +456,63 @@ xlim([-35000 35000]);
 xticks(-30000:5000:30000);
 
 % ============================================================
+% 21. MAGNITUDE DO SINAL FLAT-TOP E RÉPLICAS (COM VALORES)
+% ============================================================
+
+subplot(5,3,12);
+
+% 1. Plota a magnitude (abs) das réplicas
+espectroMag = abs(sinalAmostradoFlatTopFFT);
+stem(f, espectroMag, 'r');
+hold on;
+
+% 2. Cálculo da envolvente teórica (Função Sinc)
+f_sinc = f;
+f_sinc(f_sinc == 0) = 1e-10; % Evita divisão por zero
+envolventeSinc = abs(sin(pi * f_sinc * dReal) ./ (pi * f_sinc * dReal));
+
+% Ajusta a escala da envolvente para coincidir com a amplitude máxima
+amplitudeMaxima = max(espectroMag);
+envolventeSinc = envolventeSinc * amplitudeMaxima;
+
+% Plota a envolvente
+plot(f, envolventeSinc, 'k--', 'LineWidth', 1.5);
+
+% 3. PLOTAR OS VALORES NUMÉRICOS EM CIMA DOS IMPULSOS
+% Define um limiar (5% do máximo) para ignorar ruídos no chão do espectro
+limiar = amplitudeMaxima * 0.05;
+
+for i = 2:length(espectroMag)-1
+    % Condição: O ponto atual tem de ser maior que o anterior, maior que o seguinte e maior que o limiar
+    if espectroMag(i) > limiar && espectroMag(i) > espectroMag(i-1) && espectroMag(i) > espectroMag(i+1)
+
+        % Escreve o valor do pico ligeiramente acima dele
+        deslocamento = amplitudeMaxima * 0.08; % Espaço dinâmico para não colar na linha
+
+        text(f(i), espectroMag(i) + deslocamento, ...
+             sprintf('%.3f', espectroMag(i)), ... % %.3f para 3 casas decimais
+             'HorizontalAlignment', 'center', ...
+             'FontSize', 7, ...
+             'FontWeight', 'bold', ...
+             'Color', 'b'); % Cor azul para fácil leitura
+    end
+end
+
+grid on;
+
+xlabel('Frequência (Hz)');
+ylabel('Magnitude');
+
+title('Réplicas no Espectro com Valores Demarcados');
+
+xlim([-35000 35000]);
+xticks(-30000:5000:30000);
+
+% Ajuste no limite do eixo Y para garantir que o texto não é cortado em cima
+ylim([0 amplitudeMaxima * 1.2]);
+
+legend('Réplicas Flat-Top', 'Envolvente Sinc', 'Location', 'best');
+% ============================================================
 % 23. INFORMAÇÕES DAS AMOSTRAS
 % ============================================================
 
