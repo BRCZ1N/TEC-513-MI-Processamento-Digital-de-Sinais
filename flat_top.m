@@ -113,42 +113,33 @@ xlabel('Tempo (s)'); ylabel('Amplitude'); title('5. Sinal Filtrado vs Sinal A Or
 legend('Sinal A Original', 'Pré-Filtrado (Extraído)', 'Location', 'best');
 xlim([0 0.002]);
 
-subplot(6, 2, 7);
+subplot(6, 2, 6);
 stem(f, abs(sinalPreFiltradoFFT), 'g', 'filled'); grid on;
 xlabel('Frequência (Hz)'); ylabel('Magnitude'); title('6. Espectro Filtrado (Apenas 1 kHz)');
 xlim([-15000 15000]);
 
 % --- LINHA 5: SINAL AMOSTRADO FLAT-TOP ---
-subplot(6, 2, 8);
+subplot(6, 2, 7);
 plot(t, sinalPreFiltrado, 'g--', 'LineWidth', 1); hold on;
 stairs(t, sinalAmostrado, 'r', 'LineWidth', 1.5); grid on;
 xlabel('Tempo (s)'); ylabel('Amplitude'); title('9. Sinal Amostrado Flat-Top');
 legend('Pré-filtrado', 'Amostrado', 'Location', 'best');
 xlim([0 0.002]);
 
-<<<<<<< Updated upstream
-subplot(6, 2, 9);
-plot(f, abs(sinalAmostradoFFT), 'r'); grid on;
-xlabel('Frequência (Hz)');
-ylabel('Magnitude');
-title('10. Espectro do Sinal Amostrado');
-xlim([-75000 75000]);
-=======
-subplot(6, 2, 10);
+subplot(6, 2, 8);
 stem(f, imag(sinalAmostradoFFT), 'r', 'filled'); grid on; % Trocado abs por imag
 xlabel('Frequência (Hz)'); ylabel('Parte Imaginária'); title('10. Espectro do Sinal Amostrado');
 xlim([-55000 55000]);
->>>>>>> Stashed changes
 
 % --- LINHA 6: RECONSTRUÇÃO FINAL ---
-subplot(6, 2, 10);
+subplot(6, 2, 9);
 plot(t, sinalA, 'b--', 'LineWidth', 1.5); hold on;
 plot(t, sinalReconstruidoCompensado, 'm', 'LineWidth', 1.5); grid on;
 xlabel('Tempo (s)'); ylabel('Amplitude'); title('11. Sinal Reconstruído Final');
 legend('Sinal A Desejado', 'Reconstruído', 'Location', 'best');
 xlim([0 0.002]);
 
-subplot(6, 2, 11);
+subplot(6, 2, 10);
 stem(f, abs(sinalReconstruidoFFT), 'm', 'filled'); grid on;
 xlabel('Frequência (Hz)'); ylabel('Magnitude'); title('12. Espectro Final Reconstruído');
 xlim([-55000 55000]);
