@@ -50,15 +50,6 @@ kPasso = round(Ts/Ta);
 d = (1/3) * Ts;             % Largura do pulso (duty cycle de 1/3)
 numPontosPulso = round(d/Ta);
 
-tremPulsos = zeros(1, nPAnalog);
-for i = 0 : floor(nPAnalog/kPasso) - 1
-    idx = i*kPasso + 1;
-    if idx <= nPAnalog
-        idx_fim = min(idx + numPontosPulso - 1, nPAnalog);
-        tremPulsos(idx:idx_fim) = 1;
-    end
-end
-
 %% 4. AMOSTRAGEM FLAT-TOP (Feita sobre o sinal JÁ filtrado)
 sinalAmostrado = zeros(1, nPAnalog);
 for i = 0 : floor(nPAnalog/kPasso) - 1
@@ -86,7 +77,6 @@ f = (-nPAnalog/2 : nPAnalog/2 - 1) * (fAnalog / nPAnalog);
 
 sinalCompostoFFT = fftshift(fft(sinalComposto)) / nPAnalog;
 sinalPreFiltradoFFT = fftshift(fft(sinalPreFiltrado)) / nPAnalog;
-tremPulsosFFT = fftshift(fft(tremPulsos)) / nPAnalog;
 sinalAmostradoFFT = fftshift(fft(sinalAmostrado)) / nPAnalog;
 sinalReconstruidoFFT = fftshift(fft(sinalReconstruidoCompensado)) / nPAnalog;
 
@@ -123,44 +113,35 @@ xlabel('Tempo (s)'); ylabel('Amplitude'); title('5. Sinal Filtrado vs Sinal A Or
 legend('Sinal A Original', 'Pré-Filtrado (Extraído)', 'Location', 'best');
 xlim([0 0.002]);
 
-subplot(6, 2, 6);
+subplot(6, 2, 7);
 stem(f, abs(sinalPreFiltradoFFT), 'g', 'filled'); grid on;
 xlabel('Frequência (Hz)'); ylabel('Magnitude'); title('6. Espectro Filtrado (Apenas 1 kHz)');
 xlim([-15000 15000]);
 
-% --- LINHA 4: TREM DE PULSOS ---
-subplot(6, 2, 7);
-stairs(t, tremPulsos, 'k', 'LineWidth', 1.5); grid on;
-xlabel('Tempo (s)'); ylabel('Amplitude'); title('7. Trem de Pulsos p(t) (Duty 1/3)');
-xlim([0 0.0005]); ylim([-0.2 1.2]);
-
-subplot(6, 2, 8);
-plot(f, abs(tremPulsosFFT), 'k', 'LineWidth', 1); grid on;
-xlabel('Frequência (Hz)'); ylabel('Magnitude'); title('8. Espectro do Trem de Pulsos |P(f)|');
-xlim([-55000 55000]);
-
 % --- LINHA 5: SINAL AMOSTRADO FLAT-TOP ---
-subplot(6, 2, 9);
+subplot(6, 2, 8);
 plot(t, sinalPreFiltrado, 'g--', 'LineWidth', 1); hold on;
 stairs(t, sinalAmostrado, 'r', 'LineWidth', 1.5); grid on; % Trocado plot por stairs aqui
 xlabel('Tempo (s)'); ylabel('Amplitude'); title('9. Sinal Amostrado Flat-Top');
 legend('Pré-filtrado', 'Amostrado', 'Location', 'best');
 xlim([0 0.002]);
 
-subplot(6, 2, 10);
-stem(f, abs(sinalAmostradoFFT), 'r', 'filled'); grid on;
-xlabel('Frequência (Hz)'); ylabel('Magnitude'); title('10. Espectro do Sinal Amostrado');
-xlim([-55000 55000]);
+subplot(6, 2, 9);
+plot(f, abs(sinalAmostradoFFT), 'r'); grid on;
+xlabel('Frequência (Hz)');
+ylabel('Magnitude');
+title('10. Espectro do Sinal Amostrado');
+xlim([-75000 75000]);
 
 % --- LINHA 6: RECONSTRUÇÃO FINAL ---
-subplot(6, 2, 11);
+subplot(6, 2, 10);
 plot(t, sinalA, 'b--', 'LineWidth', 1.5); hold on;
 plot(t, sinalReconstruidoCompensado, 'm', 'LineWidth', 1.5); grid on;
 xlabel('Tempo (s)'); ylabel('Amplitude'); title('11. Sinal Reconstruído Final');
 legend('Sinal A Desejado', 'Reconstruído', 'Location', 'best');
 xlim([0 0.002]);
 
-subplot(6, 2, 12);
+subplot(6, 2, 11);
 stem(f, abs(sinalReconstruidoFFT), 'm', 'filled'); grid on;
 xlabel('Frequência (Hz)'); ylabel('Magnitude'); title('12. Espectro Final Reconstruído');
 xlim([-55000 55000]);
