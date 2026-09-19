@@ -126,19 +126,17 @@ xlabel('Tempo (s)'); ylabel('Amplitude'); title('9. Sinal Amostrado Flat-Top');
 legend('Pré-filtrado', 'Amostrado', 'Location', 'best');
 xlim([0 0.002]);
 
-<<<<<<< Updated upstream
 subplot(6, 2, 9);
 plot(f, abs(sinalAmostradoFFT), 'r'); grid on;
 xlabel('Frequência (Hz)');
 ylabel('Magnitude');
 title('10. Espectro do Sinal Amostrado');
 xlim([-75000 75000]);
-=======
+
 subplot(6, 2, 10);
 stem(f, imag(sinalAmostradoFFT), 'r', 'filled'); grid on; % Trocado abs por imag
 xlabel('Frequência (Hz)'); ylabel('Parte Imaginária'); title('10. Espectro do Sinal Amostrado');
 xlim([-55000 55000]);
->>>>>>> Stashed changes
 
 % --- LINHA 6: RECONSTRUÇÃO FINAL ---
 subplot(6, 2, 10);
