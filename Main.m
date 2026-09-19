@@ -28,7 +28,7 @@ nPlots = 5;                % Número total de plots
 sinalA = A1*sin(2*pi*f1*t);
 
 figure;
-subplot(nPlots,2,1);
+subplot(nPlots,3,1);
 plot(t, sinalA);
 grid on;
 xlabel('Tempo (s)');
@@ -39,7 +39,7 @@ xlim([0 0.01]);
 sinalB = A2*sin(2*pi*f2*t);
 
 ##figure;
-subplot(nPlots,2,2);
+subplot(nPlots,3,2);
 plot(t, sinalB);
 grid on;
 xlabel('Tempo (s)');
@@ -50,7 +50,7 @@ xlim([0 0.01]);
 sinalComposto = sinalA + sinalB;
 
 ##figure;
-subplot(nPlots,2,3);
+subplot(nPlots,3,3);
 plot(t,sinalComposto);
 grid on;
 xlabel('Tempo (s)');
@@ -75,7 +75,7 @@ sinalFiltradoFFT = sinalCompostoFFT .* filtroIdeal;
 sinalFiltrado = real(ifft(sinalFiltradoFFT));
 
 ##figure;
-subplot(nPlots,2,4);
+subplot(nPlots,3,4);
 plot(t,sinalFiltrado);
 grid on;
 xlabel('Tempo (s)');
@@ -88,7 +88,7 @@ tremImpulsos = zeros(1, nPAnalog);
 tremImpulsos(1:kPasso:end) = 1/Ta;
 
 ##figure;
-subplot(nPlots,2,5);
+subplot(nPlots,3,5);
 stem(t, tremImpulsos*Ta);
 grid on;
 xlabel('Tempo (s)');
@@ -99,7 +99,7 @@ xlim([0 0.01]);
 sinalAmostrado = sinalFiltrado .* (tremImpulsos*Ta);
 
 ##figure;
-subplot(nPlots,2,6);
+subplot(nPlots,3,6);
 stem(t, sinalAmostrado);
 grid on;
 xlabel('Tempo (s)');
@@ -112,19 +112,19 @@ f = (-nPAnalog/2 : nPAnalog/2 - 1)*(fAnalog/nPAnalog);
 sinalFiltradoFFT = fftshift(fft(sinalFiltrado))/nPAnalog;
 
 ##figure;
-subplot(nPlots,2,7);
+subplot(nPlots,3,7);
 stem(f, abs(sinalFiltradoFFT));
 grid on;
 xlabel('Frequência (Hz)');
 ylabel('Magnitude');
 title('Espectro do Sinal Filtrado');
-xlim([-10000 10000]);
-xticks(-10000 : 1000 : 10000);
+xlim([-5000 5000]);
+xticks(-5000 : 1000 : 5000);
 
 tremImpulsosFFT = fftshift(fft(tremImpulsos))/nPAnalog;
 
 ##figure;
-subplot(nPlots,2,8);
+subplot(nPlots,3,8);
 stem(f, abs(tremImpulsosFFT));
 grid on;
 xlabel('Frequência (Hz)');
@@ -133,20 +133,27 @@ title('Espectro do Trem de Impulsos');
 xlim([-20000 20000]);
 xticks(-200000 : 10000 : 200000);
 
-espectroSinalAmostrado = conv(sinalFiltradoFFT,tremImpulsosFFT);
-
-nP_conv = length(espectroSinalAmostrado);
-f_conv = linspace(-fAnalog, fAnalog, nP_conv);
+sinalAmostradoFFT = fftshift(fft(sinalAmostrado))/nPAnalog;
 
 ##figure;
-subplot(nPlots,2,9);
-stem(f_conv, abs(espectroSinalAmostrado));
+subplot(nPlots,3,9);
+stem(f, imag(sinalAmostradoFFT));
 grid on;
 xlabel('Frequência (Hz)');
-ylabel('Magnitude');
-title('Convolução dos sinais');
+title('Espectro do Sinal Amostrado');
 xlim([-35000 35000]);
 xticks(-35000 : 10000 : 35000);
+
+##figure;
+subplot(nPlots,3,10);
+stem(f, abs(sinalAmostradoFFT));
+grid on;
+xlabel('Frequência (Hz)');
+title('Espectro de Magnitude do Sinal Amostrado');
+xlim([-35000 35000]);
+xticks(-35000 : 10000 : 35000);
+
+
 
 
 
