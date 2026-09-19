@@ -1,145 +1,546 @@
 clear;
 clc;
 close all;
-pkg load signal; % Remova ou comente esta linha se estiver usando MATLAB
 
-%% 1. PARÂMETROS DO SINAL E DA SIMULAÇÃO
-f1 = 1e3;                   % Senoide 1 (1 kHz) - Sinal Desejado
-f2 = 5e3;                   % Senoide 2 (5 kHz) - Sinal Indesejado (Ruído/Aliasing)
+pkg load signal;
+
+
+% ============================================================
+% 1. FREQUÊNCIAS E PARÂMETROS DO SINAL
+% ============================================================
+
+f1 = 1e3;                   % Senoide desejada = 1 kHz
+f2 = 5e3;                   % Segunda senoide = 5 kHz
+
 A1 = 1.0;                   % Amplitude da senoide 1
 A2 = 1.2;                   % Amplitude da senoide 2
 
-fAnalog = 2e5;              % Frequência analógica simulada (200 kHz)
-Ta = 1/fAnalog;             % Período de amostragem analógico
-tempoTotal = 1;             % Tempo total de simulação (1s)
-t = 0:Ta:tempoTotal-Ta;     % Vetor de tempo "contínuo"
-nPAnalog = length(t);       % Número total de pontos analógicos
 
-fs = 20e3;                  % Frequência de amostragem ajustada (20 kHz)
+% ============================================================
+% 2. SIMULAÇÃO DO SINAL ANALÓGICO
+% ============================================================
+
+fAnalog = 1e5;              % Frequência usada para simular o analógico
+Ta = 1/fAnalog;             % Período da simulação analógica
+
+tempoTotal = 1;             % Tempo total da simulação
+t = 0:Ta:tempoTotal-Ta;
+
+nPAnalog = length(t);
+
+
+% ============================================================
+% 3. FREQUÊNCIA DE AMOSTRAGEM
+% ============================================================
+
+fs = 10e3;                  % Frequência de amostragem
 Ts = 1/fs;                  % Período de amostragem
 
-% Sinais Individuais e Composto
+fNyquist = fs/2;
+
+fCorte = 2e3;
+
+
+% ============================================================
+% 4. SENOIDE A
+% ============================================================
+
 sinalA = A1*sin(2*pi*f1*t);
+
+
+figure;
+
+subplot(5,3,1);
+
+plot(t, sinalA);
+
+grid on;
+
+xlabel('Tempo (s)');
+ylabel('Amplitude');
+
+title('Sinal A - 1 kHz');
+
+xlim([0 0.01]);
+
+
+% ============================================================
+% 5. SENOIDE B
+% ============================================================
+
 sinalB = A2*sin(2*pi*f2*t);
+
+
+subplot(5,3,2);
+
+plot(t, sinalB);
+
+grid on;
+
+xlabel('Tempo (s)');
+ylabel('Amplitude');
+
+title('Sinal B - 5 kHz');
+
+xlim([0 0.01]);
+
+
+% ============================================================
+% 6. SINAL COMPOSTO
+% ============================================================
+
 sinalComposto = sinalA + sinalB;
 
-%% 2. FILTRAGEM PRÉVIA (EXTRAÇÃO DO SINAL A ANTES DA AMOSTRAGEM)
-fCorte = 3e3;               % Frequência de corte (3 kHz)
 
-% FFT do sinal composto
-X_comp = fft(sinalComposto);
-filter_ideal = zeros(1, nPAnalog);
+subplot(5,3,3);
 
-% Criar filtro ideal
+plot(t, sinalComposto);
+
+grid on;
+
+xlabel('Tempo (s)');
+ylabel('Amplitude');
+
+title('Sinal Composto');
+
+xlim([0 0.01]);
+
+
+% ============================================================
+% 7. FILTRO IDEAL PASSA-BAIXA
+% ============================================================
+
+filtroIdeal = zeros(1, nPAnalog);
+
 for i = 1:nPAnalog
-    f_atual = (i - 1) * (fAnalog / nPAnalog);
-    % Permite frequências abaixo do corte ou frequências espelhadas
-    if f_atual <= fCorte || f_atual >= (fAnalog - fCorte)
-        filter_ideal(i) = 1;
+
+    fAtual = (i - 1) * (fAnalog / nPAnalog);
+
+    % Mantém:
+    % frequências positivas abaixo do corte
+    % e suas correspondentes negativas
+
+    if fAtual <= fCorte || ...
+       fAtual >= (fAnalog - fCorte)
+
+        filtroIdeal(i) = 1;
+
     else
-        filter_ideal(i) = 0;
+
+        filtroIdeal(i) = 0;
+
     end
+
 end
 
-% Aplica o filtro e retorna ao tempo (O resultado será o Sinal A isolado)
-X_comp_filtered = X_comp .* filter_ideal;
-sinalPreFiltrado = real(ifft(X_comp_filtered));
 
-%% 3. GERAÇÃO DO TREM DE PULSOS
+% ============================================================
+% 8. SINAL FILTRADO
+% ============================================================
+
+sinalCompostoFFT = fft(sinalComposto);
+
+sinalFiltradoFFT = ...
+    sinalCompostoFFT .* filtroIdeal;
+
+sinalFiltrado = ...
+    real(ifft(sinalFiltradoFFT));
+
+
+subplot(5,3,4);
+
+plot(t, sinalFiltrado);
+
+grid on;
+
+xlabel('Tempo (s)');
+ylabel('Amplitude');
+
+title('Sinal Filtrado - 1 kHz');
+
+xlim([0 0.01]);
+
+
+% ============================================================
+% 9. TREM DE IMPULSOS - AMOSTRAGEM IDEAL
+% ============================================================
+
 kPasso = round(Ts/Ta);
-d = (1/3) * Ts;             % Largura do pulso (duty cycle de 1/3)
+
+tremImpulsos = zeros(1, nPAnalog);
+
+tremImpulsos(1:kPasso:end) = 1/Ta;
+
+
+subplot(5,3,5);
+
+stem(t, tremImpulsos*Ta);
+
+grid on;
+
+xlabel('Tempo (s)');
+ylabel('Amplitude');
+
+title('Trem de Impulsos');
+
+xlim([0 0.01]);
+
+
+% ============================================================
+% 10. AMOSTRAGEM IDEAL
+% ============================================================
+
+sinalAmostradoIdeal = ...
+    sinalFiltrado .* (tremImpulsos*Ta);
+
+
+subplot(5,3,6);
+
+stem(t, sinalAmostradoIdeal);
+
+grid on;
+
+xlabel('Tempo (s)');
+ylabel('Amplitude');
+
+title('Amostragem Ideal');
+
+xlim([0 0.01]);
+
+
+% ============================================================
+% 11. ESPECTRO DO SINAL FILTRADO
+% ============================================================
+
+f = (-nPAnalog/2 : nPAnalog/2 - 1) ...
+    * (fAnalog/nPAnalog);
+
+sinalFiltradoFFT = ...
+    fftshift(fft(sinalFiltrado)) / nPAnalog;
+
+
+subplot(5,3,7);
+
+stem(f, abs(sinalFiltradoFFT));
+
+grid on;
+
+xlabel('Frequência (Hz)');
+ylabel('Magnitude');
+
+title('Espectro do Sinal Filtrado');
+
+xlim([-5000 5000]);
+
+xticks(-5000:1000:5000);
+
+
+% ============================================================
+% 12. ESPECTRO DO TREM DE IMPULSOS
+% ============================================================
+
+tremImpulsosFFT = ...
+    fftshift(fft(tremImpulsos)) / nPAnalog;
+
+
+subplot(5,3,8);
+
+stem(f, abs(tremImpulsosFFT));
+
+grid on;
+
+xlabel('Frequência (Hz)');
+ylabel('Magnitude');
+
+title('Espectro do Trem de Impulsos');
+
+xlim([-20000 20000]);
+
+xticks(-20000:5000:20000);
+
+
+% ============================================================
+% 13. ESPECTRO DA AMOSTRAGEM IDEAL
+% ============================================================
+
+sinalAmostradoIdealFFT = ...
+    fftshift(fft(sinalAmostradoIdeal)) / nPAnalog;
+
+
+subplot(5,3,9);
+
+stem(f, abs(sinalAmostradoIdealFFT));
+
+grid on;
+
+xlabel('Frequência (Hz)');
+ylabel('Magnitude');
+
+title('Espectro da Amostragem Ideal');
+
+xlim([-35000 35000]);
+
+xticks(-30000:5000:30000);
+
+
+% ============================================================
+% ============================================================
+%                  FLAT-TOP
+% ============================================================
+% ============================================================
+
+
+% ============================================================
+% 14. LARGURA DO TOPO PLANO
+% ============================================================
+
+% Vamos utilizar um pulso com duração de 1/3 de Ts.
+
+d = Ts/3;
+
+% Número de pontos da simulação analógica correspondentes
+% à largura do pulso
+
 numPontosPulso = round(d/Ta);
 
-%% 4. AMOSTRAGEM FLAT-TOP (Feita sobre o sinal JÁ filtrado)
-sinalAmostrado = zeros(1, nPAnalog);
-for i = 0 : floor(nPAnalog/kPasso) - 1
-    idx = i*kPasso + 1;
-    if idx <= nPAnalog
-        val = sinalPreFiltrado(idx); % Faz o 'Sample'
-        idx_fim = min(idx + numPontosPulso - 1, nPAnalog);
-        sinalAmostrado(idx:idx_fim) = val; % Aplica o 'Hold' (topo plano)
+% Largura REAL obtida após a discretização
+
+dReal = numPontosPulso * Ta;
+
+
+fprintf('\n========================================\n');
+fprintf('PARAMETROS DA AMOSTRAGEM FLAT-TOP\n');
+fprintf('========================================\n');
+
+fprintf('fs = %.2f Hz\n', fs);
+fprintf('Ts = %.6e s\n', Ts);
+
+fprintf('d ideal = %.6e s\n', d);
+
+fprintf('d real  = %.6e s\n', dReal);
+
+fprintf('Pontos por periodo Ts = %d\n', kPasso);
+
+fprintf('Pontos do pulso = %d\n', numPontosPulso);
+
+fprintf('Duty Cycle real = %.2f %%\n', ...
+        100*dReal/Ts);
+
+
+% ============================================================
+% 15. OBTENDO AS AMOSTRAS
+% ============================================================
+
+% Os valores das amostras são exatamente aqueles obtidos
+% nos instantes nTs.
+
+amostras = sinalFiltrado(1:kPasso:end);
+
+
+% ============================================================
+% 16. CONSTRUÇÃO DO PULSO RETANGULAR
+% ============================================================
+
+% Durante d:
+% valor = 1
+%
+% Após d até completar Ts:
+% valor = 0
+
+pulsoFlatTop = [ ...
+    ones(1, numPontosPulso), ...
+    zeros(1, kPasso - numPontosPulso) ...
+];
+
+
+% ============================================================
+% 17. CONSTRUÇÃO DO SINAL FLAT-TOP
+% ============================================================
+
+% Cada amostra é mantida constante durante d.
+
+sinalAmostradoFlatTop = ...
+    kron(amostras, pulsoFlatTop);
+
+
+% Ajuste para garantir que o vetor tenha
+% exatamente o mesmo tamanho do sinal original.
+
+sinalAmostradoFlatTop = ...
+    sinalAmostradoFlatTop(1:nPAnalog);
+
+
+% ============================================================
+% 18. GRÁFICO DO FLAT-TOP
+% ============================================================
+
+subplot(5,3,10);
+
+plot(t, sinalFiltrado, 'b--', 'LineWidth', 1);
+
+hold on;
+
+stairs(t, ...
+       sinalAmostradoFlatTop, ...
+       'r', ...
+       'LineWidth', 1.5);
+
+grid on;
+
+xlabel('Tempo (s)');
+ylabel('Amplitude');
+
+title('Amostragem Flat-Top');
+
+legend('Sinal Filtrado', ...
+       'Flat-Top');
+
+xlim([0 0.01]);
+
+
+% ============================================================
+% 19. MOSTRAR AS AMOSTRAS NUMERICAMENTE
+% ============================================================
+
+temposAmostra = t(1:kPasso:end);
+
+% Mostrar somente as primeiras 10 amostras
+
+numMostrar = min(10, length(amostras));
+
+for i = 1:numMostrar
+
+    if amostras(i) >= 0
+
+        deslocamento = 0.15;
+
+    else
+
+        deslocamento = -0.15;
+
     end
+
+    text( ...
+        temposAmostra(i), ...
+        amostras(i) + deslocamento, ...
+        sprintf('%.2f', amostras(i)), ...
+        'HorizontalAlignment', 'center', ...
+        'FontSize', 8, ...
+        'FontWeight', 'bold');
+
 end
 
-%% 5. RECONSTRUÇÃO (Para demonstrar a eficácia da amostragem)
-% Usa-se o mesmo filtro ideal para recuperar o sinal amostrado
-X_amostrado = fft(sinalAmostrado);
-X_reconstruido = X_amostrado .* filter_ideal;
-sinalReconstruido = real(ifft(X_reconstruido));
 
-% Compensação de amplitude pelo Duty Cycle REAL simulado
-d_real = numPontosPulso * Ta;
-ganhoReconstrucao = Ts / d_real;
-sinalReconstruidoCompensado = sinalReconstruido * ganhoReconstrucao;
+% ============================================================
+% 20. ESPECTRO DO SINAL FLAT-TOP
+% ============================================================
 
-%% 6. ANÁLISE ESPECTRAL DOS SINAIS PARA VISUALIZAÇÃO
-f = (-nPAnalog/2 : nPAnalog/2 - 1) * (fAnalog / nPAnalog);
+sinalAmostradoFlatTopFFT = ...
+    fftshift(fft(sinalAmostradoFlatTop)) / nPAnalog;
 
-sinalCompostoFFT = fftshift(fft(sinalComposto)) / nPAnalog;
-sinalPreFiltradoFFT = fftshift(fft(sinalPreFiltrado)) / nPAnalog;
-sinalAmostradoFFT = fftshift(fft(sinalAmostrado)) / nPAnalog;
-sinalReconstruidoFFT = fftshift(fft(sinalReconstruidoCompensado)) / nPAnalog;
 
-%% 7. VISUALIZAÇÃO DOS RESULTADOS (Grid 6x2 Fluxo Lógico)
-figure('Name', 'Pipeline: Filtragem -> Amostragem -> Reconstrução', 'Position', [50, 50, 1600, 1050]);
+subplot(5,3,11);
 
-% --- LINHA 1: SINAIS ORIGINAIS (A e B separados) ---
-subplot(6, 2, 1);
-plot(t, sinalA, 'b', 'LineWidth', 1.5); grid on;
-xlabel('Tempo (s)'); ylabel('Amplitude'); title('1. Sinal A (1 kHz) - Desejado');
-xlim([0 0.002]);
+stem(f, ...
+     imag(sinalAmostradoFlatTopFFT));
 
-subplot(6, 2, 2);
-plot(t, sinalB, 'r', 'LineWidth', 1.5); grid on;
-xlabel('Tempo (s)'); ylabel('Amplitude'); title('2. Sinal B (5 kHz) - Indesejado');
-xlim([0 0.002]);
+grid on;
 
-% --- LINHA 2: SINAL COMPOSTO ---
-subplot(6, 2, 3);
-plot(t, sinalComposto, 'k', 'LineWidth', 1.5); grid on;
-xlabel('Tempo (s)'); ylabel('Amplitude'); title('3. Sinal Composto x(t) = A + B');
-xlim([0 0.002]);
+xlabel('Frequência (Hz)');
+ylabel('Magnitude');
 
-subplot(6, 2, 4);
-stem(f, abs(sinalCompostoFFT), 'k', 'filled'); grid on;
-xlabel('Frequência (Hz)'); ylabel('Magnitude'); title('4. Espectro do Sinal Composto');
-xlim([-15000 15000]);
+title('Espectro do Sinal Flat-Top');
 
-% --- LINHA 3: SINAL PRÉ-FILTRADO (Extração de A) ---
-subplot(6, 2, 5);
-plot(t, sinalA, 'b--', 'LineWidth', 1.5); hold on;
-plot(t, sinalPreFiltrado, 'g', 'LineWidth', 1.5); grid on;
-xlabel('Tempo (s)'); ylabel('Amplitude'); title('5. Sinal Filtrado vs Sinal A Original');
-legend('Sinal A Original', 'Pré-Filtrado (Extraído)', 'Location', 'best');
-xlim([0 0.002]);
+xlim([-35000 35000]);
 
-subplot(6, 2, 6);
-stem(f, abs(sinalPreFiltradoFFT), 'g', 'filled'); grid on;
-xlabel('Frequência (Hz)'); ylabel('Magnitude'); title('6. Espectro Filtrado (Apenas 1 kHz)');
-xlim([-15000 15000]);
+xticks(-30000:5000:30000);
 
-% --- LINHA 5: SINAL AMOSTRADO FLAT-TOP ---
-subplot(6, 2, 7);
-plot(t, sinalPreFiltrado, 'g--', 'LineWidth', 1); hold on;
-stairs(t, sinalAmostrado, 'r', 'LineWidth', 1.5); grid on;
-xlabel('Tempo (s)'); ylabel('Amplitude'); title('9. Sinal Amostrado Flat-Top');
-legend('Pré-filtrado', 'Amostrado', 'Location', 'best');
-xlim([0 0.002]);
 
-subplot(6, 2, 8);
-stem(f, imag(sinalAmostradoFFT), 'r', 'filled'); grid on; % Trocado abs por imag
-xlabel('Frequência (Hz)'); ylabel('Parte Imaginária'); title('10. Espectro do Sinal Amostrado');
-xlim([-55000 55000]);
+% ============================================================
+% 21. COMPARAÇÃO IDEAL x FLAT-TOP
+% ============================================================
 
-% --- LINHA 6: RECONSTRUÇÃO FINAL ---
-subplot(6, 2, 9);
-plot(t, sinalA, 'b--', 'LineWidth', 1.5); hold on;
-plot(t, sinalReconstruidoCompensado, 'm', 'LineWidth', 1.5); grid on;
-xlabel('Tempo (s)'); ylabel('Amplitude'); title('11. Sinal Reconstruído Final');
-legend('Sinal A Desejado', 'Reconstruído', 'Location', 'best');
-xlim([0 0.002]);
+subplot(5,3,12);
 
-subplot(6, 2, 10);
-stem(f, abs(sinalReconstruidoFFT), 'm', 'filled'); grid on;
-xlabel('Frequência (Hz)'); ylabel('Magnitude'); title('12. Espectro Final Reconstruído');
-xlim([-55000 55000]);
+plot(t, sinalFiltrado, ...
+     'k--', ...
+     'LineWidth', 1);
+
+hold on;
+
+stem(t, ...
+     sinalAmostradoIdeal, ...
+     'b');
+
+stairs(t, ...
+       sinalAmostradoFlatTop, ...
+       'r', ...
+       'LineWidth', 1.5);
+
+grid on;
+
+xlabel('Tempo (s)');
+ylabel('Amplitude');
+
+title('Comparação: Ideal x Flat-Top');
+
+legend('Sinal Original', ...
+       'Ideal', ...
+       'Flat-Top');
+
+xlim([0 0.01]);
+
+
+% ============================================================
+% 22. COMPARAÇÃO DOS ESPECTROS
+% ============================================================
+
+subplot(5,3,13);
+
+plot(f, ...
+     abs(sinalAmostradoIdealFFT), ...
+     'b');
+
+hold on;
+
+plot(f, ...
+     abs(sinalAmostradoFlatTopFFT), ...
+     'r');
+
+grid on;
+
+xlabel('Frequência (Hz)');
+ylabel('Magnitude');
+
+title('Espectro: Ideal x Flat-Top');
+
+legend('Ideal', ...
+       'Flat-Top');
+
+xlim([-20000 20000]);
+
+
+% ============================================================
+% 23. INFORMAÇÕES DAS AMOSTRAS
+% ============================================================
+
+fprintf('\n========================================\n');
+fprintf('PRIMEIRAS AMOSTRAS\n');
+fprintf('========================================\n');
+
+numMostrar = min(10, length(amostras));
+
+for i = 1:numMostrar
+
+    fprintf( ...
+        'n = %d | t = %.6f ms | x[n] = %.4f\n', ...
+        i-1, ...
+        temposAmostra(i)*1000, ...
+        amostras(i));
+
+end
+
+
+fprintf('\n========================================\n');
+fprintf('FIM DA SIMULACAO\n');
+fprintf('========================================\n');
