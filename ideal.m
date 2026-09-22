@@ -17,37 +17,12 @@ Ta = 1/fAnalog;%Frequencia da grade computacional
 tempoTotal = 1;%Tempo total de simulação
 t = 0:Ta:tempoTotal-Ta;%Grade computacional
 nPAnalog = length(t);%Total de pontos da grade
-fCorte = 3e3; %Frequencia de corte do filtro passa baixas anti aliasing
+fCorte = 2.25e3; %Frequencia de corte do filtro passa baixas anti aliasing
+fCorteReconstrucao = fs/2; %Frequencia de corte do filtro passa baixas de reconstrução
 
 sinalA = A1*sin(2*pi*f1*t);%Sinal a ser amostrado
 sinalB = A2*sin(2*pi*f2*t);%Sinal que fornece o impulso em frequencia
 sinalComposto = sinalA + sinalB;
-
-figure('Position',[100 100 1200 750]);
-
-subplot(3,1,1);
-plot(t,sinalA,'LineWidth',1.2);
-grid on;
-xlabel('Tempo (s)');
-ylabel('Amplitude');
-title('Sinal A');
-xlim([0 0.01]);
-
-subplot(3,1,2);
-plot(t,sinalB,'LineWidth',1.2);
-grid on;
-xlabel('Tempo (s)');
-ylabel('Amplitude');
-title('Sinal B');
-xlim([0 0.01]);
-
-subplot(3,1,3);
-plot(t,sinalComposto,'LineWidth',1.2);
-grid on;
-xlabel('Tempo (s)');
-ylabel('Amplitude');
-title('Sinal Composto');
-xlim([0 0.01]);
 
 %Emulando um filtro ideal criando uma grade no modelo da computacional
 filtroIdeal = zeros(1,nPAnalog);
@@ -66,22 +41,38 @@ sinalCompostoFFT = fft(sinalComposto);%Jogando na frequencia para retirar o espe
 sinalFiltradoFFT = sinalCompostoFFT .* filtroIdeal;%Filtro no tempo pra retirar o espectro da segunda senoide
 sinalFiltrado = real(ifft(sinalFiltradoFFT));%Volto pro dominio do tempo pra ter o meu sinal filtrado e no tempo
 
-figure('Position',[100 100 1200 600]);
+figure('Position',[100 100 1200 900]);
 
-subplot(2,1,1);
+subplot(4,1,1);
+plot(t,sinalA,'LineWidth',1.2);
+grid on;
+xlabel('Tempo (s)');
+ylabel('Amplitude');
+title('Sinal A');
+xlim([0 0.01]);
+
+subplot(4,1,2);
+plot(t,sinalB,'LineWidth',1.2);
+grid on;
+xlabel('Tempo (s)');
+ylabel('Amplitude');
+title('Sinal B');
+xlim([0 0.01]);
+
+subplot(4,1,3);
 plot(t,sinalComposto,'LineWidth',1.2);
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
-title('Sinal Composto Antes da Filtragem');
+title('Sinal Composto');
 xlim([0 0.01]);
 
-subplot(2,1,2);
+subplot(4,1,4);
 plot(t,sinalFiltrado,'LineWidth',1.2);
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
-title('Sinal Após Filtragem');
+title('Sinal Filtrado');
 xlim([0 0.01]);
 
 kPasso = round(Ts/Ta);
@@ -114,7 +105,7 @@ stem(t,sinalAmostrado,'filled');
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
-title('Amostragem: x(t) \cdot p(t)');
+title('Amostragem: x(t) \cdot s(t)');
 xlim([0 0.01]);
 
 subplot(4,1,4);
@@ -162,4 +153,39 @@ ylabel('Magnitude');
 title('Espectro do Sinal Amostrado');
 xlim([-25000 25000]);
 xticks(-25000:5000:25000);
+
+%Filtro ideal de reconstrução aplicado após a amostragem
+filtroReconstrucao = zeros(1,nPAnalog);
+
+for i = 1:nPAnalog
+    fAtual = (i-1)*(fAnalog/nPAnalog);
+
+    if fAtual <= fCorteReconstrucao || fAtual >= (fAnalog-fCorteReconstrucao)
+        filtroReconstrucao(i) = 1;
+    else
+        filtroReconstrucao(i) = 0;
+    end
+end
+
+sinalAmostradoFFTOriginal = fft(sinalAmostrado);
+sinalReconstruidoFFT = sinalAmostradoFFTOriginal .* filtroReconstrucao;
+sinalReconstruido = real(ifft(sinalReconstruidoFFT)) * kPasso;
+
+figure('Position',[100 100 1200 750]);
+
+subplot(3,1,1);
+stem(t,sinalAmostrado,'filled');
+grid on;
+xlabel('Tempo (s)');
+ylabel('Amplitude');
+title('Sinal Amostrado');
+xlim([0 0.01]);
+
+subplot(3,1,2);
+plot(t,sinalReconstruido,'LineWidth',1.2);
+grid on;
+xlabel('Tempo (s)');
+ylabel('Amplitude');
+title('Sinal Reconstruído Após Filtro Ideal');
+xlim([0 0.01]);
 
