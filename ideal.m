@@ -22,7 +22,7 @@ sinalA = A1*sin(2*pi*f1*t);%Sinal a ser amostrado
 sinalB = A2*sin(2*pi*f2*t);%Sinal que fornece o impulso em frequencia
 sinalComposto = sinalA + sinalB;
 
-%Emulando um filtro ideal criando uma grade no modelo da computacional
+
 filtroIdeal = zeros(1,nPAnalog);
 
 for i = 1:nPAnalog
