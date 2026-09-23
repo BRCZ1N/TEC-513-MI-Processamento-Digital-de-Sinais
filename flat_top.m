@@ -16,6 +16,7 @@ fAnalog = 360e3;%Frequencia da grade computacional
 Ta = 1/fAnalog;%Periodo da grade computacional
 tempoTotal = 1;%Tempo total de simulacao
 t = 0:Ta:tempoTotal-Ta;%Grade computacional
+t = 0:Ta:tempoTotal-Ta;%Grade computacional
 nPAnalog = length(t);%Total de pontos da grade
 fCorte = 3e3;%Frequencia de corte do filtro passa baixas
 
@@ -130,7 +131,12 @@ xlabel('Frequência (Hz)');
 ylabel('Magnitude');
 title('Espectro de Magnitude do Sinal Filtrado');
 xlim([-10000 10000]);
-xticks(-10000:1000:10000);
+
+
+xticks(-10000:2000:10000);
+
+
+xtickangle(45);
 
 subplot(2,1,2);
 stem(f,abs(sinalAmostradoFlatTopFFT_plot),'filled');
@@ -180,11 +186,11 @@ for i = 1:nPAnalog
     end
 end
 
-fatorCompensacao = Ts/dReal;%Compensacao da reducao de amplitude causada pela abertura do pulso
+fatorCompensacao = Ts/dReal;
 
 sinalAmostradoFlatTopFFT = fft(sinalAmostradoFlatTop);
-sinalReconstruidoFFT = sinalAmostradoFlatTopFFT .* filtroReconstrucao * fatorCompensacao;%Aplicando o filtro e a compensacao
-sinalReconstruido = real(ifft(sinalReconstruidoFFT));%Voltando para o dominio do tempo
+sinalReconstruidoFFT = sinalAmostradoFlatTopFFT .* filtroReconstrucao * fatorCompensacao
+sinalReconstruido = real(ifft(sinalReconstruidoFFT));
 
 filtroReconstrucaoPlot = fftshift(filtroReconstrucao);
 sinalReconstruidoFFT_plot = fftshift(sinalReconstruidoFFT)/nPAnalog;
