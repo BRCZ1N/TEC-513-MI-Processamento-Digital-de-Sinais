@@ -4,171 +4,214 @@ close all;
 
 pkg load signal;
 
-f1 = 2e3;%Frequencia da senoide a ser amostrada
-f2 = 5e3;%Frequencia da senoide do impulso na frequencia
-A1 = 1.0;%Amplitude da senoide a ser amostrada
-A2 = 1.5;%Amplitude da senoide do impulso na frequencia
+f1 = 2e3;
+f2 = 5e3;
+A1 = 1.0;
+A2 = 1.5;
 
-fs = 3e3; %Frequencia de amostragem
-Ts = 1/fs; %Periodo de amostragem
-fAnalog = 360e3; %Frequencia da grade computacional
-Ta = 1/fAnalog;%Frequencia da grade computacional
-tempoTotal = 1;%Tempo total de simulação
-t = 0:Ta:tempoTotal-Ta;%Grade computacional
-nPAnalog = length(t);%Total de pontos da grade
-fCorte = 3e3; %Frequencia de corte do filtro passa baixas anti aliasing
+fs = 4.5e3;
+Ts = 1/fs;
+fAnalog = 360e3;
+Ta = 1/fAnalog;
+tempoTotal = 1;
+t = 0:Ta:tempoTotal-Ta;
+nPAnalog = length(t);
 
-sinalA = A1*sin(2*pi*f1*t);%Sinal a ser amostrado
-sinalB = A2*sin(2*pi*f2*t);%Sinal que fornece o impulso em frequencia
+fCorte = 3e3;
+
+sinalA = A1*sin(2*pi*f1*t);
+sinalB = A2*sin(2*pi*f2*t);
 sinalComposto = sinalA + sinalB;
 
-
-filtroIdeal = zeros(1,nPAnalog);
-
+filtroIdeal = zeros(1, nPAnalog);
 for i = 1:nPAnalog
-    fAtual = (i-1)*(fAnalog/nPAnalog);
-
-    if fAtual <= fCorte || fAtual >= (fAnalog-fCorte)
+    fAtual = (i-1) * (fAnalog / nPAnalog);
+    if fAtual <= fCorte || fAtual >= (fAnalog - fCorte)
         filtroIdeal(i) = 1;
     else
         filtroIdeal(i) = 0;
     end
 end
 
-sinalCompostoFFT = fft(sinalComposto);%Jogando na frequencia para retirar o espectro da segunda senoide
-sinalFiltradoFFT = sinalCompostoFFT .* filtroIdeal;%Filtro no tempo pra retirar o espectro da segunda senoide
-sinalFiltrado = real(ifft(sinalFiltradoFFT));%Volto pro dominio do tempo pra ter o meu sinal filtrado e no tempo
+sinalCompostoFFT = fft(sinalComposto, nPAnalog);
+sinalFiltradoFFT = sinalCompostoFFT .* filtroIdeal;
+sinalFiltrado = real(ifft(sinalFiltradoFFT));
 
 figure;
 
 subplot(4,1,1);
-plot(t,sinalA,'LineWidth',1.2);
+plot(t,sinalA);
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal A');
-xlim([0 0.01]);
+xlim([0 0.05]);
+yticks(-1:0.2:1);
 
 subplot(4,1,2);
-plot(t,sinalB,'LineWidth',1.2);
+plot(t,sinalB);
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal B');
-xlim([0 0.01]);
+xlim([0 0.05]);
+yticks(-1.5:0.3:1.5);
 
 subplot(4,1,3);
-plot(t,sinalComposto,'LineWidth',1.2);
+plot(t,sinalComposto);
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal Composto');
-xlim([0 0.01]);
+xlim([0 0.05]);
 
 subplot(4,1,4);
-plot(t,sinalFiltrado,'LineWidth',1.2);
+plot(t,sinalFiltrado);
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal Filtrado');
-xlim([0 0.01]);
+xlim([0 0.05]);
+yticks(-1.5:0.3:1.5);
+
+saveas(gcf, 'Ideal_01_Sinais_No_Tempo.png');
 
 kPasso = round(fAnalog / fs);
+tremImpulsos = zeros(1,nPAnalog);
+tremImpulsos(1:kPasso:end) = 1;
 
-tremImpulsos = zeros(1,nPAnalog);%Grade computacional do trem de impulsos
-tremImpulsos(1:kPasso:end) = 1;%Faço a área dele tender a 1 discretamente
-
-sinalAmostrado = sinalFiltrado .* tremImpulsos;%Amostrando o sinal x(t).s(t)
+sinalAmostrado = sinalFiltrado .* tremImpulsos;
 
 figure;
 
 subplot(3,1,1);
-plot(t,sinalFiltrado,'LineWidth',1.2);
+plot(t,sinalFiltrado);
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal Filtrado');
-xlim([0 0.01]);
+xlim([0 0.05]);
 
 subplot(3,1,2);
-stem(t,tremImpulsos,'filled');
+stem(t,tremImpulsos,'.');
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Trem de Impulsos');
-xlim([0 0.01]);
+xlim([0 0.05]);
 
 subplot(3,1,3);
-stem(t,sinalAmostrado,'filled');
+stem(t,sinalAmostrado,'.');
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
-title('Amostragem: x(t) \cdot p(t)');
-xlim([0 0.01]);
-
+title('Amostragem');
+xlim([0 0.05]);
 hold off;
 
-f = (-nPAnalog/2:nPAnalog/2-1)*(fAnalog/nPAnalog);%Criando a grade computacional da frequencia
+saveas(gcf, 'Ideal_02_Processo_De_Amostragem.png');
 
-sinalFiltradoFFT_plot = fftshift(fft(sinalFiltrado))/nPAnalog;
-tremImpulsosFFT_plot = (fftshift(fft(tremImpulsos))/nPAnalog) * fAnalog;
-sinalAmostradoFFT_plot = (fftshift(fft(sinalAmostrado))/nPAnalog) * fAnalog;
+f = (-nPAnalog/2 : nPAnalog/2 - 1) * (fAnalog / nPAnalog);
 
-figure;
+sinalFiltradoFFT_plot = fftshift(fft(sinalFiltrado)) / nPAnalog;
+tremImpulsosFFT_plot = fftshift(fft(tremImpulsos)) / nPAnalog * fAnalog;
+sinalAmostradoFFT_plot = fftshift(fft(sinalAmostrado)) / nPAnalog * fAnalog;
 
-subplot(3,1,1);
-stem(f,abs(sinalFiltradoFFT_plot),'filled');
-grid on;
-xlabel('Frequência (Hz)');
-ylabel('Magnitude');
-title('Espectro de Magnitude do Sinal Filtrado');
-xlim([-10000 10000]);
-xticks(-10000:2000:10000);
+magFiltrado = abs(sinalFiltradoFFT_plot);
+faseFiltrado = angle(sinalFiltradoFFT_plot) * (180/pi);
+faseFiltrado(magFiltrado < 0.01 * max(magFiltrado)) = 0;
 
-subplot(3,1,2);
-stem(f,abs(tremImpulsosFFT_plot),'filled');
-grid on;
-xlabel('Frequência (Hz)');
-ylabel('Magnitude');
-title('Espectro de Magnitude do Trem de Impulsos');
-xlim([-5*fs 5*fs]);
-xticks(-5*fs : fs : 5*fs);
+magTrem = abs(tremImpulsosFFT_plot);
 
-subplot(3,1,3);
-stem(f,abs(sinalAmostradoFFT_plot),'filled');
-grid on;
-xlabel('Frequência (Hz)');
-ylabel('Magnitude');
-title('Espectro de Magnitude do Sinal Amostrado');
-xlim([-5*fs 5*fs]);
-xticks(-5*fs : fs : 5*fs);
+magAmostrado = abs(sinalAmostradoFFT_plot);
+faseAmostrado = angle(sinalAmostradoFFT_plot) * (180/pi);
+faseAmostrado(magAmostrado < 0.01 * max(magAmostrado)) = 0;
 
 figure;
 
 subplot(2,1,1);
-stem(f,imag(sinalFiltradoFFT_plot),'filled');
+stem(f, imag(sinalFiltradoFFT_plot), '.');
 grid on;
 xlabel('Frequência (Hz)');
 ylabel('Amplitude');
-title('Espectro do Sinal Filtrado');
-xlim([-10000 10000]);
-xticks(-10000:2000:10000);
+title('Espectro do sinal - Sinal Filtrado');
+xlim([-f1*5 f1*5]);
+xticks(-f1*5:f1:f1*5);
 
 subplot(2,1,2);
-stem(f,imag(sinalAmostradoFFT_plot),'filled');
+stem(f, imag(sinalAmostradoFFT_plot), '.');
 grid on;
 xlabel('Frequência (Hz)');
 ylabel('Amplitude');
-title('Espectro do Sinal Amostrado');
+title('Espectro do sinal - Sinal Amostrado');
 xlim([-5*fs 5*fs]);
 xticks(-5*fs : fs : 5*fs);
 
+saveas(gcf, 'Ideal_03_Espectros_Do_Sinal_Imag.png');
+
+figure;
+
+subplot(3,1,1);
+stem(f, magFiltrado, '.');
+grid on;
+xlabel('Frequência (Hz)');
+ylabel('Magnitude');
+title('Espectro de Magnitude - Sinal Filtrado');
+xlim([-10000 10000]);
+xticks(-10000:2000:10000);
+
+subplot(3,1,2);
+stem(f, magTrem, '.');
+grid on;
+xlabel('Frequência (Hz)');
+ylabel('Magnitude');
+title('Espectro de Magnitude - Trem de Impulsos');
+xlim([-5*fs 5*fs]);
+xticks(-5*fs : fs : 5*fs);
+
+subplot(3,1,3);
+stem(f, magAmostrado, '.');
+grid on;
+xlabel('Frequência (Hz)');
+ylabel('Magnitude');
+title('Espectro de Magnitude - Sinal Amostrado');
+xlim([-5*fs 5*fs]);
+xticks(-5*fs : fs : 5*fs);
+
+saveas(gcf, 'Ideal_04_Espectros_De_Magnitude.png');
+
+figure;
+
+subplot(2,1,1);
+stem(f, faseFiltrado, '.');
+grid on;
+xlabel('Frequência (Hz)');
+ylabel('Fase (graus)');
+title('Espectro de Fase - Sinal Filtrado');
+xlim([-10000 10000]);
+xticks(-10000:2000:10000);
+ylim([-180 180]);
+yticks(-180:90:180);
+
+subplot(2,1,2);
+stem(f, faseAmostrado, '.');
+grid on;
+xlabel('Frequência (Hz)');
+ylabel('Fase (graus)');
+title('Espectro de Fase - Sinal Amostrado');
+xlim([-5*fs 5*fs]);
+xticks(-5*fs : fs : 5*fs);
+ylim([-180 180]);
+yticks(-180:90:180);
+
+saveas(gcf, 'Ideal_05_Espectros_De_Fase.png');
+
 fCorteReconstrucao = fs/2;
-filtroReconstrucao = zeros(1,nPAnalog);
+filtroReconstrucao = zeros(1, nPAnalog);
 
 for i = 1:nPAnalog
-    fAtual = (i-1)*(fAnalog/nPAnalog);
-    if fAtual <= fCorteReconstrucao || fAtual >= (fAnalog-fCorteReconstrucao)
+    fAtual = (i-1) * (fAnalog / nPAnalog);
+    if fAtual <= fCorteReconstrucao || fAtual >= (fAnalog - fCorteReconstrucao)
         filtroReconstrucao(i) = 1;
     else
         filtroReconstrucao(i) = 0;
@@ -179,21 +222,21 @@ sinalReconstruidoFFT = fft(sinalAmostrado) .* filtroReconstrucao * kPasso;
 sinalReconstruido = real(ifft(sinalReconstruidoFFT));
 
 filtroReconstrucaoPlot = fftshift(filtroReconstrucao);
-sinalReconstruidoFFT_plot = fftshift(sinalReconstruidoFFT)/nPAnalog;
+sinalReconstruidoFFT_plot = fftshift(sinalReconstruidoFFT) / nPAnalog;
 
 figure;
 
 subplot(4,1,1);
-stem(f,imag(sinalAmostradoFFT_plot),'filled');
+stem(f,imag(sinalAmostradoFFT_plot),'.');
 grid on;
 xlabel('Frequência (Hz)');
 ylabel('Amplitude');
-title('Espectro do Sinal Amostrado');
+title('Espectro do sinal - Sinal Amostrado');
 xlim([-5*fs 5*fs]);
 xticks(-5*fs : fs : 5*fs);
 
 subplot(4,1,2);
-plot(f,filtroReconstrucaoPlot,'LineWidth',2,'Color','r');
+plot(f,filtroReconstrucaoPlot);
 grid on;
 xlabel('Frequência (Hz)');
 ylabel('Ganho');
@@ -203,22 +246,24 @@ xticks(-5*fs : fs : 5*fs);
 ylim([-0.2 1.2]);
 
 subplot(4,1,3);
-stem(f,imag(sinalReconstruidoFFT_plot),'filled');
+stem(f,imag(sinalReconstruidoFFT_plot),'.');
 grid on;
 xlabel('Frequência (Hz)');
 ylabel('Amplitude');
-title('Espectro do Sinal Reconstruído');
+title('Espectro do sinal - Sinal Reconstruído');
 xlim([-5*fs 5*fs]);
 xticks(-5*fs : fs : 5*fs);
 
 subplot(4,1,4);
-plot(t, sinalFiltrado, 'LineWidth', 2, 'DisplayName', 'Sinal Filtrado');
+plot(t, sinalFiltrado,'DisplayName', 'Sinal Filtrado');
 hold on;
-plot(t, sinalReconstruido, '--', 'LineWidth', 2, 'DisplayName', 'Sinal Reconstruído');
+plot(t, sinalReconstruido, '--','DisplayName', 'Sinal Reconstruído');
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Comparação: Sinal Filtrado vs Sinal Reconstruído');
-xlim([0 0.01]);
+xlim([0 0.05]);
 legend('Location', 'northeast');
 hold off;
+
+saveas(gcf, 'Ideal_06_Reconstrucao_E_Comparacao.png');
