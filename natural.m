@@ -87,7 +87,7 @@ ylabel('Amplitude');
 title('Sinal Filtrado');
 xlim([0 0.05]);
 
-saveas(gcf, sprintf('Natural_fs_%gHz_01_Sinais_No_Tempo.png', fs));
+saveas(gcf, sprintf('Natural_%gHz_01_Sinais_No_Tempo.png', fs));
 
 % Figura 2: Processo de amostragem no tempo (3 subplots - sem o 4° gráfico)
 figure;
@@ -117,7 +117,7 @@ ylabel('Amplitude');
 title('Amostragem (Sinal Amostrado)');
 xlim([0 0.05]);
 
-saveas(gcf, sprintf('Natural_fs_%gHz_02_Processo_De_Amostragem.png', fs));
+saveas(gcf, sprintf('Natural_%gHz_02_Processo_De_Amostragem.png', fs));
 
 f = (-nPAnalog/2:nPAnalog/2-1)*(fAnalog/nPAnalog);
 
@@ -155,7 +155,7 @@ title('Espectro de Magnitude do Sinal Amostrado');
 xlim([-2.5*fs 2.5*fs]);
 xticks(-2.5*fs : fs : 2.5*fs);
 
-saveas(gcf, sprintf('Natural_fs_%gHz_03_Espectros_De_Magnitude.png', fs));
+saveas(gcf, sprintf('Natural_%gHz_03_Espectros_De_Magnitude.png', fs));
 
 % Figura 4: Espectros com foco na parte imaginária (2 subplots)
 figure;
@@ -178,7 +178,7 @@ title('Espectro do Sinal Amostrado');
 xlim([-2.5*fs 2.5*fs]);
 xticks(-2.5*fs : fs : 2.5*fs);
 
-saveas(gcf, sprintf('Natural_fs_%gHz_04_Espectros_Do_Sinal_Imag.png', fs));
+saveas(gcf, sprintf('Natural_%gHz_04_Espectros_Do_Sinal_Imag.png', fs));
 
 % Reconstrução por filtro passa-baixas ideal
 fCorteReconstrucao = fs/2;
@@ -243,4 +243,4 @@ xlim([0 0.05]);
 legend('Location', 'northeast');
 hold off;
 
-saveas(gcf, sprintf('Natural_fs_%gHz_05_Reconstrucao_E_Comparacao.png', fs));
+saveas(gcf, sprintf('Natural_%gHz_05_Reconstrucao_E_Comparacao.png', fs));
