@@ -9,7 +9,7 @@ f2 = 5e3;
 A1 = 1.0;
 A2 = 1.5;
 
-fs = 3e3;
+fs = 4.5e3;
 Ts = 1/fs;
 fAnalog = 360e3;
 Ta = 1/fAnalog;
@@ -37,6 +37,7 @@ sinalCompostoFFT = fft(sinalComposto, nPAnalog);
 sinalFiltradoFFT = sinalCompostoFFT .* filtroIdeal;
 sinalFiltrado = real(ifft(sinalFiltradoFFT));
 
+% Figura 1: Sinais no Tempo
 figure;
 
 subplot(4,1,1);
@@ -45,7 +46,7 @@ grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal A');
-xlim([0 0.05]);
+xlim([0 0.01]);
 yticks(-1:0.2:1);
 
 subplot(4,1,2);
@@ -54,7 +55,7 @@ grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal B');
-xlim([0 0.05]);
+xlim([0 0.01]);
 yticks(-1.5:0.3:1.5);
 
 subplot(4,1,3);
@@ -63,7 +64,7 @@ grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal Composto');
-xlim([0 0.05]);
+xlim([0 0.01]);
 
 subplot(4,1,4);
 plot(t,sinalFiltrado);
@@ -71,8 +72,8 @@ grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal Filtrado');
-xlim([0 0.05]);
-yticks(-1.5:0.3:1.5);
+xlim([0 0.01]);
+yticks(-1:0.2:1);
 
 saveas(gcf, sprintf('Ideal_%gHz_01_Sinais_No_Tempo.png', fs));
 
@@ -82,6 +83,7 @@ tremImpulsos(1:kPasso:end) = 1;
 
 sinalAmostrado = sinalFiltrado .* tremImpulsos;
 
+% Figura 2: Processo de amostragem no tempo (3 subplots com comparação)
 figure;
 
 subplot(3,1,1);
@@ -90,7 +92,7 @@ grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal Filtrado');
-xlim([0 0.05]);
+xlim([0 0.01]);
 
 subplot(3,1,2);
 stem(t,tremImpulsos,'.');
@@ -98,15 +100,18 @@ grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Trem de Impulsos');
-xlim([0 0.05]);
+xlim([0 0.01]);
 
 subplot(3,1,3);
+plot(t,sinalFiltrado,'--');
+hold on;
 stem(t,sinalAmostrado,'.');
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
-title('Amostragem');
-xlim([0 0.05]);
+title('Sinal Filtrado e Sinal Amostrado');
+legend('Sinal Filtrado','Amostrado');
+xlim([0 0.01]);
 hold off;
 
 saveas(gcf, sprintf('Ideal_%gHz_02_Processo_De_Amostragem.png', fs));
@@ -127,6 +132,7 @@ magAmostrado = abs(sinalAmostradoFFT_plot);
 faseAmostrado = angle(sinalAmostradoFFT_plot) * (180/pi);
 faseAmostrado(magAmostrado < 0.01 * max(magAmostrado)) = 0;
 
+% Figura 3: Espectro Imaginário
 figure;
 
 subplot(2,1,1);
@@ -149,6 +155,7 @@ xticks(-5*fs : fs : 5*fs);
 
 saveas(gcf, sprintf('Ideal_%gHz_03_Espectros_Do_Sinal_Imag.png', fs));
 
+% Figura 4: Espectros de Magnitude
 figure;
 
 subplot(3,1,1);
@@ -180,6 +187,7 @@ xticks(-5*fs : fs : 5*fs);
 
 saveas(gcf, sprintf('Ideal_%gHz_04_Espectros_De_Magnitude.png', fs));
 
+% Figura 5: Espectros de Fase
 figure;
 
 subplot(2,1,1);
@@ -224,6 +232,7 @@ sinalReconstruido = real(ifft(sinalReconstruidoFFT));
 filtroReconstrucaoPlot = fftshift(filtroReconstrucao);
 sinalReconstruidoFFT_plot = fftshift(sinalReconstruidoFFT) / nPAnalog;
 
+% Figura 6: Reconstrução e Comparação
 figure;
 
 subplot(4,1,1);
@@ -262,7 +271,7 @@ grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Comparação: Sinal Filtrado vs Sinal Reconstruído');
-xlim([0 0.05]);
+xlim([0 0.01]);
 legend('Location', 'northeast');
 hold off;
 

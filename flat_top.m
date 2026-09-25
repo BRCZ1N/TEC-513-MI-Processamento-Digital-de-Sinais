@@ -9,7 +9,7 @@ f2 = 5e3;        % Frequencia da segunda senoide
 A1 = 1.0;        % Amplitude da senoide a ser amostrada
 A2 = 1.5;        % Amplitude da segunda senoide
 
-fs = 3e3;        % Frequencia de amostragem
+fs = 4.5e3;        % Frequencia de amostragem
 Ts = 1/fs;       % Periodo de amostragem
 fNyquist = fs/2; % Frequencia de Nyquist
 fAnalog = 360e3; % Frequencia da grade computacional
@@ -48,7 +48,8 @@ grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal A');
-xlim([0 0.05]);
+xlim([0 0.01]);
+yticks(-1:0.2:1);
 
 subplot(4,1,2);
 plot(t,sinalB);
@@ -56,7 +57,7 @@ grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal B');
-xlim([0 0.05]);
+xlim([0 0.01]);
 
 subplot(4,1,3);
 plot(t,sinalComposto);
@@ -64,7 +65,7 @@ grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal Composto');
-xlim([0 0.05]);
+xlim([0 0.01]);
 
 subplot(4,1,4);
 plot(t,sinalFiltrado);
@@ -72,7 +73,8 @@ grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal Filtrado');
-xlim([0 0.05]);
+xlim([0 0.01]);
+yticks(-1:0.2:1);
 
 saveas(gcf, sprintf('FlatTop_%gHz_01_Sinais_No_Tempo.png', fs));
 
@@ -88,7 +90,7 @@ pulsoFlatTop = [ones(1, numPontosPulso), zeros(1, kPasso - numPontosPulso)]; % P
 sinalAmostradoFlatTop = kron(amostras, pulsoFlatTop); % Construindo o sinal Flat-Top
 sinalAmostradoFlatTop = sinalAmostradoFlatTop(1:nPAnalog);
 
-% Figura 2: Processo de amostragem no tempo (3 subplots)
+% Figura 2: Processo de amostragem no tempo (3 subplots - com os 2 gráficos de sobreposição no 3º subplot)
 figure;
 
 subplot(3,1,1);
@@ -97,7 +99,7 @@ grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal Filtrado');
-xlim([0 0.05]);
+xlim([0 0.01]);
 
 subplot(3,1,2);
 stairs(t,sinalAmostradoFlatTop);
@@ -105,18 +107,18 @@ grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
 title('Sinal Amostrado Flat-Top');
-xlim([0 0.05]);
+xlim([0 0.01]);
 
 subplot(3,1,3);
-plot(t,sinalFiltrado,'--');
+plot(t, sinalFiltrado);
 hold on;
-stairs(t,sinalAmostradoFlatTop);
+stairs(t, sinalAmostradoFlatTop);
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
-title('Sinal Filtrado e Sinal Flat-Top');
-legend('Sinal Filtrado','Flat-Top');
-xlim([0 0.05]);
+title('Sinal Contínuo e Amostragem Flat-Top sobreposta');
+legend('Sinal Contínuo', 'Flat-Top Amostrado');
+xlim([0 0.01]);
 hold off;
 
 saveas(gcf, sprintf('FlatTop_%gHz_02_Processo_De_Amostragem.png', fs));
@@ -126,21 +128,52 @@ f = (-nPAnalog/2 : nPAnalog/2 - 1) * (fAnalog / nPAnalog); % Grade computacional
 sinalFiltradoFFT_plot = fftshift(fft(sinalFiltrado)) / nPAnalog;
 sinalAmostradoFlatTopFFT_plot = fftshift(fft(sinalAmostradoFlatTop)) / nPAnalog;
 
-% Figura 3: Espectros de Magnitude
+magFiltrado = abs(sinalFiltradoFFT_plot);
+faseFiltrado = angle(sinalFiltradoFFT_plot) * (180/pi);
+faseFiltrado(magFiltrado < 0.01 * max(magFiltrado)) = 0;
+
+magFlatTop = abs(sinalAmostradoFlatTopFFT_plot);
+faseFlatTop = angle(sinalAmostradoFlatTopFFT_plot) * (180/pi);
+faseFlatTop(magFlatTop < 0.01 * max(magFlatTop)) = 0;
+
+% Figura 3: Espectro do sinal - Parte Imaginária (2 subplots)
 figure;
 
 subplot(2,1,1);
-stem(f, abs(sinalFiltradoFFT_plot), '.');
+stem(f, imag(sinalFiltradoFFT_plot), '.');
+grid on;
+xlabel('Frequência (Hz)');
+ylabel('Amplitude');
+title('Espectro do sinal - Sinal Filtrado');
+xlim([-10000 10000]);
+xticks(-10000:2000:10000);
+
+subplot(2,1,2);
+stem(f, imag(sinalAmostradoFlatTopFFT_plot), '.');
+grid on;
+xlabel('Frequência (Hz)');
+ylabel('Amplitude');
+title('Espectro do sinal - Sinal Amostrado Flat-Top');
+xlim([-5*fs 5*fs]);
+xticks(-5*fs : fs : 5*fs);
+
+saveas(gcf, sprintf('FlatTop_%gHz_03_Espectros_Do_Sinal_Imag.png', fs));
+
+% Figura 4: Espectros de Magnitude (2 subplots)
+figure;
+
+subplot(2,1,1);
+stem(f, magFiltrado, '.');
 grid on;
 xlabel('Frequência (Hz)');
 ylabel('Magnitude');
-title('Espectro de Magnitude do Sinal Filtrado');
+title('Espectro de Magnitude - Sinal Filtrado');
 xlim([-10000 10000]);
 xticks(-10000:2000:10000);
 xtickangle(45);
 
 subplot(2,1,2);
-stem(f, abs(sinalAmostradoFlatTopFFT_plot), '.');
+stem(f, magFlatTop, '.');
 grid on;
 xlabel('Frequência (Hz)');
 ylabel('Magnitude');
@@ -148,21 +181,45 @@ title('Espectro de Magnitude do Sinal Flat-Top');
 xlim([-15000 15000]);
 xticks(-15000:3000:15000);
 
-saveas(gcf, sprintf('FlatTop_%gHz_03_Espectros_De_Magnitude.png', fs));
+saveas(gcf, sprintf('FlatTop_%gHz_04_Espectros_De_Magnitude.png', fs));
 
-espectroMag = abs(sinalAmostradoFlatTopFFT_plot);
-
-fSinc = f;
-fSinc(fSinc == 0) = 1e-10;
-
-envolventeSinc = abs(sin(pi * fSinc * dReal) ./ (pi * fSinc * dReal)); % Envolvente Sinc
-amplitudeMaxima = max(espectroMag);
-envolventeSinc = envolventeSinc * amplitudeMaxima;
-
-% Figura 4: Espectro Flat-Top e Envolvente Sinc
+% Figura 5: Espectros de Fase (2 subplots)
 figure;
 
-stem(f, espectroMag, '.');
+subplot(2,1,1);
+stem(f, faseFiltrado, '.');
+grid on;
+xlabel('Frequência (Hz)');
+ylabel('Fase (graus)');
+title('Espectro de Fase - Sinal Filtrado');
+xlim([-10000 10000]);
+xticks(-10000:2000:10000);
+ylim([-180 180]);
+yticks(-180:90:180);
+
+subplot(2,1,2);
+stem(f, faseFlatTop, '.');
+grid on;
+xlabel('Frequência (Hz)');
+ylabel('Fase (graus)');
+title('Espectro de Fase - Sinal Amostrado Flat-Top');
+xlim([-5*fs 5*fs]);
+xticks(-5*fs : fs : 5*fs);
+ylim([-180 180]);
+yticks(-180:90:180);
+
+saveas(gcf, sprintf('FlatTop_%gHz_05_Espectros_De_Fase.png', fs));
+
+% Espectro Flat-Top e Envolvente Sinc adicional
+fSinc = f;
+fSinc(fSinc == 0) = 1e-10;
+envolventeSinc = abs(sin(pi * fSinc * dReal) ./ (pi * fSinc * dReal));
+amplitudeMaxima = max(magFlatTop);
+envolventeSinc = envolventeSinc * amplitudeMaxima;
+
+figure;
+
+stem(f, magFlatTop, '.');
 hold on;
 plot(f, envolventeSinc, 'k--');
 grid on;
@@ -175,7 +232,7 @@ ylim([0 amplitudeMaxima * 1.2]);
 legend('Espectro Flat-Top', 'Envolvente Sinc', 'Location', 'northeast');
 hold off;
 
-saveas(gcf, sprintf('FlatTop_%gHz_04_Envolvente_Sinc.png', fs));
+saveas(gcf, sprintf('FlatTop_%gHz_06_Envolvente_Sinc.png', fs));
 
 fCorteReconstrucao = fs/2;
 filtroReconstrucao = zeros(1, nPAnalog);
@@ -199,54 +256,47 @@ sinalReconstruido = real(ifft(sinalReconstruidoFFT));
 filtroReconstrucaoPlot = fftshift(filtroReconstrucao);
 sinalReconstruidoFFT_plot = fftshift(sinalReconstruidoFFT) / nPAnalog;
 
-% Figura 5: Reconstrução e Comparação (3 subplots)
+% Figura 7: Reconstrução e Comparação (4 subplots)
 figure;
 
-subplot(3,1,1);
-stem(f, abs(sinalAmostradoFlatTopFFT_plot), '.');
+subplot(4,1,1);
+stem(f, imag(sinalAmostradoFlatTopFFT_plot), '.');
 grid on;
 xlabel('Frequência (Hz)');
-ylabel('Magnitude');
-title('Espectro do Sinal Flat-Top');
+ylabel('Amplitude');
+title('Espectro do sinal - Sinal Amostrado Flat-Top');
 xlim([-5*fs 5*fs]);
-xticks(-5*fs:fs:5*fs);
+xticks(-5*fs : fs : 5*fs);
 
-subplot(3,1,2);
+subplot(4,1,2);
 plot(f, filtroReconstrucaoPlot);
 grid on;
 xlabel('Frequência (Hz)');
 ylabel('Ganho');
 title('Filtro Ideal de Reconstrução');
 xlim([-5*fs 5*fs]);
-xticks(-5*fs:fs:5*fs);
+xticks(-5*fs : fs : 5*fs);
 ylim([-0.2 1.2]);
 
-subplot(3,1,3);
-plot(t, sinalFiltrado);
+subplot(4,1,3);
+stem(f, imag(sinalReconstruidoFFT_plot), '.');
+grid on;
+xlabel('Frequência (Hz)');
+ylabel('Amplitude');
+title('Espectro do sinal - Sinal Reconstruído');
+xlim([-5*fs 5*fs]);
+xticks(-5*fs : fs : 5*fs);
+
+subplot(4,1,4);
+plot(t, sinalFiltrado, 'DisplayName', 'Sinal Filtrado');
 hold on;
-plot(t, sinalReconstruido, '--');
+plot(t, sinalReconstruido, '--', 'DisplayName', 'Sinal Reconstruído');
 grid on;
 xlabel('Tempo (s)');
 ylabel('Amplitude');
-title('Sinal Filtrado vs Sinal Reconstruído');
-legend('Sinal Filtrado', 'Sinal Reconstruído');
-xlim([0 0.05]);
+title('Comparação: Sinal Filtrado vs Sinal Reconstruído');
+xlim([0 0.01]);
+legend('Location', 'northeast');
 hold off;
 
-saveas(gcf, sprintf('FlatTop_%gHz_05_Reconstrucao_E_Comparacao.png', fs));
-
-% Figura 6: Comparação final detalhada no tempo
-figure;
-
-plot(t, sinalFiltrado);
-hold on;
-plot(t, sinalReconstruido, '--');
-grid on;
-xlabel('Tempo (s)');
-ylabel('Amplitude');
-title('Comparação entre Sinal Original e Reconstruído');
-legend('Sinal Filtrado', 'Sinal Reconstruído');
-xlim([0 0.05]);
-hold off;
-
-saveas(gcf, sprintf('FlatTop_%gHz_06_Comparacao_Final.png', fs));
+saveas(gcf, sprintf('FlatTop_%gHz_07_Reconstrucao_E_Comparacao.png', fs));
