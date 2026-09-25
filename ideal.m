@@ -9,7 +9,7 @@ f2 = 5e3;
 A1 = 1.0;
 A2 = 1.5;
 
-fs = 4.5e3;
+fs = 3e3;
 Ts = 1/fs;
 fAnalog = 360e3;
 Ta = 1/fAnalog;
@@ -74,7 +74,7 @@ title('Sinal Filtrado');
 xlim([0 0.05]);
 yticks(-1.5:0.3:1.5);
 
-saveas(gcf, 'Ideal_01_Sinais_No_Tempo.png');
+saveas(gcf, sprintf('Ideal_fs_%gHz_01_Sinais_No_Tempo.png', fs));
 
 kPasso = round(fAnalog / fs);
 tremImpulsos = zeros(1,nPAnalog);
@@ -109,7 +109,7 @@ title('Amostragem');
 xlim([0 0.05]);
 hold off;
 
-saveas(gcf, 'Ideal_02_Processo_De_Amostragem.png');
+saveas(gcf, sprintf('Ideal_fs_%gHz_02_Processo_De_Amostragem.png', fs));
 
 f = (-nPAnalog/2 : nPAnalog/2 - 1) * (fAnalog / nPAnalog);
 
@@ -147,7 +147,7 @@ title('Espectro do sinal - Sinal Amostrado');
 xlim([-5*fs 5*fs]);
 xticks(-5*fs : fs : 5*fs);
 
-saveas(gcf, 'Ideal_03_Espectros_Do_Sinal_Imag.png');
+saveas(gcf, sprintf('Ideal_fs_%gHz_03_Espectros_Do_Sinal_Imag.png', fs));
 
 figure;
 
@@ -178,7 +178,7 @@ title('Espectro de Magnitude - Sinal Amostrado');
 xlim([-5*fs 5*fs]);
 xticks(-5*fs : fs : 5*fs);
 
-saveas(gcf, 'Ideal_04_Espectros_De_Magnitude.png');
+saveas(gcf, sprintf('Ideal_fs_%gHz_04_Espectros_De_Magnitude.png', fs));
 
 figure;
 
@@ -204,7 +204,7 @@ xticks(-5*fs : fs : 5*fs);
 ylim([-180 180]);
 yticks(-180:90:180);
 
-saveas(gcf, 'Ideal_05_Espectros_De_Fase.png');
+saveas(gcf, sprintf('Ideal_fs_%gHz_05_Espectros_De_Fase.png', fs));
 
 fCorteReconstrucao = fs/2;
 filtroReconstrucao = zeros(1, nPAnalog);
@@ -266,4 +266,4 @@ xlim([0 0.05]);
 legend('Location', 'northeast');
 hold off;
 
-saveas(gcf, 'Ideal_06_Reconstrucao_E_Comparacao.png');
+saveas(gcf, sprintf('Ideal_fs_%gHz_06_Reconstrucao_E_Comparacao.png', fs));
