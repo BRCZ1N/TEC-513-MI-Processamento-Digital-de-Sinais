@@ -2,14 +2,14 @@ clear;
 clc;
 close all;
 
-pkg load signal;
+% pkg load signal;
 
 f1 = 2e3;        % Frequencia da senoide a ser amostrada
 f2 = 5e3;        % Frequencia da senoide do impulso na frequencia
 A1 = 1.0;        % Amplitude da senoide a ser amostrada
 A2 = 1.5;        % Amplitude da senoide do impulso na frequencia
 
-fs = 4.5e3;        % Frequencia de amostragem
+fs = 4.5e3;      % Frequencia de amostragem
 Ts = 1/fs;       % Periodo de amostragem
 fAnalog = 360e3; % Frequencia da grade computacional
 Ta = 1/fAnalog;  % Periodo da grade computacional
@@ -38,6 +38,7 @@ sinalFiltrado = real(ifft(sinalFiltradoFFT)); % Volto pro dominio do tempo pra t
 
 % Figura 1: Sinais no Tempo
 figure;
+datacursormode on; % Habilita o cursor de dados (Data Tips) para interação
 
 subplot(3,1,1);
 plot(t,sinalA);
@@ -66,6 +67,7 @@ xlim([0 0.01]);
 saveas(gcf, sprintf('Ideal_%gHz_01_Sinais_No_Tempo_A.png', fs));
 
 figure;
+datacursormode on;
 
 subplot(1,1,1);
 plot(t,sinalFiltrado);
@@ -83,8 +85,9 @@ tremImpulsos(1:kPasso:end) = 1;    % Faço a área dele tender a 1 discretamente
 
 sinalAmostrado = sinalFiltrado .* tremImpulsos; % Amostrando o sinal x(t).s(t)
 
-% Figura 2: Processo de amostragem no tempo (4 subplots: com o sinal sozinho E o sobreposto)
+% Figura 2: Processo de amostragem no tempo
 figure;
+datacursormode on;
 
 subplot(3,1,1);
 plot(t,sinalFiltrado);
@@ -113,6 +116,7 @@ xlim([0 0.01]);
 saveas(gcf, sprintf('Ideal_%gHz_02_Processo_De_Amostragem_A.png', fs));
 
 figure;
+datacursormode on;
 
 subplot(1,1,1);
 plot(t,sinalFiltrado,'--');
@@ -146,6 +150,7 @@ faseAmostrado(magAmostrado < 0.01 * max(magAmostrado)) = 0;
 
 % Figura 3: Espectro Imaginário
 figure;
+datacursormode on;
 
 subplot(2,1,1);
 stem(f, imag(sinalFiltradoFFT_plot), '.');
@@ -169,6 +174,7 @@ saveas(gcf, sprintf('Ideal_%gHz_03_Espectros_Do_Sinal_Imag.png', fs));
 
 % Figura 4: Espectros de Magnitude
 figure;
+datacursormode on;
 
 subplot(3,1,1);
 stem(f, magFiltrado, '.');
@@ -201,6 +207,7 @@ saveas(gcf, sprintf('Ideal_%gHz_04_Espectros_De_Magnitude.png', fs));
 
 % Figura 5: Espectros de Fase
 figure;
+datacursormode on;
 
 subplot(2,1,1);
 stem(f, faseFiltrado, '.');
@@ -246,6 +253,7 @@ sinalReconstruidoFFT_plot = fftshift(sinalReconstruidoFFT) / nPAnalog;
 
 % Figura 6: Reconstrução e Comparação
 figure;
+datacursormode on;
 
 subplot(3,1,1);
 stem(f,imag(sinalAmostradoFFT_plot),'.');
@@ -278,6 +286,7 @@ xticks(-5*fs : fs : 5*fs);
 saveas(gcf, sprintf('Ideal_%gHz_06_Reconstrucao_E_Comparacao_A.png', fs));
 
 figure;
+datacursormode on;
 
 subplot(1,1,1);
 plot(t, sinalFiltrado,'DisplayName', 'Sinal Filtrado');

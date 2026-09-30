@@ -2,7 +2,7 @@ clear;
 clc;
 close all;
 
-pkg load signal;
+% pkg load signal; 
 
 f1 = 2e3;        % Frequencia do Sinal A (util)
 f2 = 5e3;        % Frequencia do Sinal B (fora da banda permitida)
@@ -27,10 +27,8 @@ sinalComposto = sinalA + sinalB;
 
 % Emulando um filtro ideal anti-aliasing
 filtroIdeal = zeros(1,nPAnalog);
-
 for i = 1:nPAnalog
     fAtual = (i-1)*(fAnalog/nPAnalog);
-
     if fAtual <= fCorte || fAtual >= (fAnalog-fCorte)
         filtroIdeal(i) = 1;
     else
@@ -44,6 +42,7 @@ sinalFiltrado = real(ifft(sinalFiltradoFFT));
 
 % Figura 1: Sinais no tempo
 figure;
+datacursormode on; % Ativa o cursor de dados
 
 subplot(3,1,1);
 plot(t,sinalA);
@@ -72,6 +71,7 @@ xlim([0 0.01]);
 saveas(gcf, sprintf('Natural_%gHz_01_Sinais_No_Tempo_A.png', fs));
 
 figure;
+datacursormode on;
 
 subplot(1,1,1);
 plot(t,sinalFiltrado);
@@ -95,6 +95,7 @@ sinalAmostrado = sinalFiltrado .* tremPulsos; % Amostragem natural: x(t) * p(t)
 
 % Figura 2: Processo de amostragem no tempo
 figure;
+datacursormode on;
 
 subplot(3,1,1);
 plot(t,sinalFiltrado);
@@ -123,6 +124,7 @@ xlim([0 0.01]);
 saveas(gcf, sprintf('Natural_%gHz_02_Processo_De_Amostragem_A.png', fs));
 
 figure;
+datacursormode on;
 
 subplot(1,1,1);
 plot(t, sinalFiltrado, '--');
@@ -156,6 +158,7 @@ faseAmostrado(magAmostrado < 0.01 * max(magAmostrado)) = 0;
 
 % Figura 3: Espectro do sinal - Parte Imaginária (2 subplots)
 figure;
+datacursormode on;
 
 subplot(2,1,1);
 stem(f,imag(sinalFiltradoFFT_plot),'.');
@@ -179,6 +182,7 @@ saveas(gcf, sprintf('Natural_%gHz_03_Espectros_Do_Sinal_Imag.png', fs));
 
 % Figura 4: Espectros de Magnitude (3 subplots)
 figure;
+datacursormode on;
 
 subplot(3,1,1);
 stem(f,magFiltrado,'.');
@@ -211,6 +215,7 @@ saveas(gcf, sprintf('Natural_%gHz_04_Espectros_De_Magnitude.png', fs));
 
 % Figura 5: Espectros de Fase (2 subplots)
 figure;
+datacursormode on;
 
 subplot(2,1,1);
 stem(f,faseFiltrado,'.');
@@ -239,7 +244,6 @@ saveas(gcf, sprintf('Natural_%gHz_05_Espectros_De_Fase.png', fs));
 % Reconstrução por filtro passa-baixas ideal
 fCorteReconstrucao = fs/2;
 filtroReconstrucao = zeros(1,nPAnalog);
-
 for i = 1:nPAnalog
     fAtual = (i-1)*(fAnalog/nPAnalog);
     if fAtual <= fCorteReconstrucao || fAtual >= (fAnalog-fCorteReconstrucao)
@@ -257,6 +261,7 @@ sinalReconstruidoFFT_plot = fftshift(sinalReconstruidoFFT)/nPAnalog;
 
 % Figura 6: Etapa de Reconstrução e Comparação
 figure;
+datacursormode on;
 
 subplot(3,1,1);
 stem(f,imag(sinalAmostradoFFT_plot),'.');
@@ -289,6 +294,7 @@ xticks(-5*fs : fs : 5*fs);
 saveas(gcf, sprintf('Natural_%gHz_06_Reconstrucao_E_Comparacao_A.png', fs));
 
 figure;
+datacursormode on;
 
 subplot(1,1,1);
 plot(t, sinalFiltrado,'DisplayName', 'Sinal Filtrado');
