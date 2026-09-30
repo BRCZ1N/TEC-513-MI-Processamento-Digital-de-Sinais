@@ -9,7 +9,7 @@ f2 = 5e3;        % Frequencia do Sinal B (fora da banda permitida)
 A1 = 1.0;        % Amplitude do Sinal A
 A2 = 1.5;        % Amplitude do Sinal B
 
-fs = 3e3;        % Frequencia de amostragem
+fs = 4.5e3;        % Frequencia de amostragem
 Ts = 1/fs;       % Periodo de amostragem
 fAnalog = 360e3; % Frequencia da grade computacional (emula tempo continuo)
 Ta = 1/fAnalog;  % Passo da grade computacional
@@ -154,7 +154,7 @@ magAmostrado = abs(sinalAmostradoFFT_plot);
 faseAmostrado = angle(sinalAmostradoFFT_plot) * (180/pi);
 faseAmostrado(magAmostrado < 0.01 * max(magAmostrado)) = 0;
 
-% Figura 3: Espectro do sinal - Parte Imaginária (2 subplots)
+% Figura 3: Espectro do sinal - Parte Imaginária
 figure;
 
 subplot(2,1,1);
